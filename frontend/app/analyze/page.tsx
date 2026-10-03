@@ -44,6 +44,7 @@ export default function AnalyzePage() {
   );
 }
 
+// Satellite Change Detection suite with synchronized forensic comparison
 function AnalyzeContent() {
   const searchParams = useSearchParams();
   const initialScanId = searchParams.get("scan_id");
