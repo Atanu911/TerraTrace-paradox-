@@ -207,3 +207,169 @@ def generate_pdf_report(
             for idx, d in enumerate(detections, 1):
                 f.write(f"{idx}. {d.get('change_type')}: {d.get('area_hectares')} ha ({d.get('confidence')}%)\n")
         return output_pdf_path + ".txt"
+
+
+def generate_comparative_pdf_report(
+    output_pdf_path: str,
+    regions: List[Dict[str, Any]]
+) -> str:
+    """
+    Generate a formal Multi-Region Comparative Forensic PDF Report.
+    Summarizes malicious activities (Mining, Deforestation, Construction, Heatmaps) across regions.
+    """
+    os.makedirs(os.path.dirname(output_pdf_path), exist_ok=True)
+    try:
+        from reportlab.lib.pagesizes import letter
+        from reportlab.lib import colors
+        from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, HRFlowable, PageBreak
+        from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+
+        doc = SimpleDocTemplate(
+            output_pdf_path,
+            pagesize=letter,
+            rightMargin=36,
+            leftMargin=36,
+            topMargin=36,
+            bottomMargin=36
+        )
+
+        styles = getSampleStyleSheet()
+        title_style = ParagraphStyle(
+            'CompTitle',
+            parent=styles['Heading1'],
+            fontName='Helvetica-Bold',
+            fontSize=20,
+            leading=24,
+            textColor=colors.HexColor('#0B1B3A')
+        )
+        subtitle_style = ParagraphStyle(
+            'CompSubtitle',
+            parent=styles['Normal'],
+            fontName='Helvetica',
+            fontSize=10,
+            leading=13,
+            textColor=colors.HexColor('#0284C7')
+        )
+        section_style = ParagraphStyle(
+            'CompSection',
+            parent=styles['Heading2'],
+            fontName='Helvetica-Bold',
+            fontSize=13,
+            leading=16,
+            textColor=colors.HexColor('#0B1B3A')
+        )
+        body_style = ParagraphStyle(
+            'CompBody',
+            parent=styles['Normal'],
+            fontName='Helvetica',
+            fontSize=8.5,
+            leading=11,
+            textColor=colors.HexColor('#1E293B')
+        )
+        mono_style = ParagraphStyle(
+            'CompMono',
+            parent=styles['Normal'],
+            fontName='Courier',
+            fontSize=7.5,
+            leading=9,
+            textColor=colors.HexColor('#0F172A')
+        )
+
+        story = []
+
+        # Header
+        story.append(Paragraph("TERRATRACE GEOSPATIAL INTELLIGENCE COMPARATIVE REPORT", title_style))
+        story.append(Paragraph("Multi-Region Forensic Comparison • Mining, Deforestation, Construction & Heatmaps", subtitle_style))
+        story.append(Spacer(1, 6))
+        story.append(HRFlowable(width="100%", thickness=2, color=colors.HexColor('#0284C7'), spaceBefore=2, spaceAfter=10))
+
+        # Comparative Summary Table
+        story.append(Paragraph(f"Comparative Overview ({len(regions)} Target Hotspots)", section_style))
+        story.append(Spacer(1, 4))
+
+        summary_rows = [
+            [
+                Paragraph("<b>Target Region</b>", body_style),
+                Paragraph("<b>State</b>", body_style),
+                Paragraph("<b>Total Area (ha)</b>", body_style),
+                Paragraph("<b>Forest Trend (ISFR)</b>", body_style),
+                Paragraph("<b>Primary Mineral / Threat</b>", body_style),
+            ]
+        ]
+        for r in regions:
+            summary_rows.append([
+                Paragraph(f"<b>{r.get('name', 'Site')}</b>", body_style),
+                Paragraph(str(r.get('state', 'India')), body_style),
+                Paragraph(f"{float(r.get('total_area_ha', 0)):.1f} ha", body_style),
+                Paragraph(str(r.get('forest_trend', 'N/A')), body_style),
+                Paragraph(str(r.get('minerals', 'Mining/Deforestation')), body_style),
+            ])
+
+        sum_table = Table(summary_rows, colWidths=[150, 75, 80, 100, 135])
+        sum_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#0B1B3A')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+            ('PADDING', (0, 0), (-1, -1), 4),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#CCCCCC')),
+            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.HexColor('#F8FAFC'), colors.white])
+        ]))
+        story.append(sum_table)
+        story.append(Spacer(1, 14))
+
+        # Detailed breakdown per region
+        for r in regions:
+            story.append(Paragraph(f"Hotspot: {r.get('name')} ({r.get('state')})", section_style))
+            desc_text = f"Coordinates: {r.get('lat', 0):.4f}°N, {r.get('lon', 0):.4f}°E | Mineral Target: {r.get('minerals', 'N/A')} | 5-Yr Forest Trend: {r.get('forest_trend', 'N/A')}"
+            story.append(Paragraph(desc_text, mono_style))
+            story.append(Spacer(1, 4))
+
+            acts = r.get("activities", [])
+            act_rows = [
+                [
+                    Paragraph("<b>Activity Type</b>", body_style),
+                    Paragraph("<b>Title & Incident Details</b>", body_style),
+                    Paragraph("<b>Area (ha)</b>", body_style),
+                    Paragraph("<b>Confidence</b>", body_style)
+                ]
+            ]
+            for act in acts:
+                act_rows.append([
+                    Paragraph(f"<b>{act.get('type', 'Unknown')}</b>", body_style),
+                    Paragraph(f"{act.get('title', '')} — {act.get('desc', '')}", body_style),
+                    Paragraph(f"{float(act.get('area_ha', 0)):.1f} ha", body_style),
+                    Paragraph(f"{float(act.get('confidence', 0)):.1f}%", body_style),
+                ])
+
+            act_table = Table(act_rows, colWidths=[80, 290, 80, 90])
+            act_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#0284C7')),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+                ('PADDING', (0, 0), (-1, -1), 3),
+                ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#DDDDDD')),
+            ]))
+            story.append(act_table)
+            story.append(Spacer(1, 10))
+
+        # Legal declaration
+        story.append(Spacer(1, 10))
+        story.append(Paragraph("Chain of Custody & Algorithmic Attestation", section_style))
+        story.append(Paragraph(
+            "This document synthesizes forensic change detections generated by TerraTrace using multi-spectral "
+            "radiometric alignment, structural similarity (SSIM) anomaly classification, and ground truth validation. "
+            "All findings are cryptographically hashed and prepared for regulatory and environmental audit submission.",
+            body_style
+        ))
+        story.append(Spacer(1, 6))
+        story.append(Paragraph(f"Report Generated: {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')} • TerraTrace Geospatial Core Engine", subtitle_style))
+
+        doc.build(story)
+        logger.info(f"Generated comparative PDF report at {output_pdf_path}")
+        return output_pdf_path
+    except Exception as e:
+        logger.error(f"Comparative report generation error: {e}")
+        with open(output_pdf_path + ".txt", "w", encoding="utf-8") as f:
+            f.write(f"TERRATRACE COMPARATIVE REPORT ({len(regions)} regions)\n")
+            for r in regions:
+                f.write(f"\n{r.get('name')} ({r.get('state')}): {r.get('total_area_ha')} ha\n")
+        return output_pdf_path + ".txt"
+

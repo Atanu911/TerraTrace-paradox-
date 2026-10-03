@@ -202,6 +202,40 @@ export interface PixabayImage {
   height?: number;
 }
 
+export interface HotspotDetection {
+  id: number;
+  change_type: "Deforestation" | "Construction" | "Mining" | "Heatmap" | "Other";
+  confidence: number;
+  area_hectares: number;
+  centroid_lat: number;
+  centroid_lon: number;
+}
+
+export interface HotspotItem {
+  id: number;
+  name: string;
+  state: string;
+  minerals: string;
+  forest_trend: string;
+  description: string;
+  latitude: number;
+  longitude: number;
+  total_area_ha: number;
+  avg_confidence: number;
+  type_counts: Record<string, number>;
+  scan_id: number | null;
+  report_pdf_path: string | null;
+  detections: HotspotDetection[];
+}
+
+export interface AIReportResponse {
+  location_name: string;
+  report_text: string;
+  total_area_ha: number;
+  avg_confidence: number;
+  type_totals: Record<string, number>;
+}
+
 export const api = {
   async getHealth(): Promise<HealthStatus> {
     const res = await fetch(`${API_BASE_URL}/api/health`, { cache: "no-store" });
@@ -393,6 +427,49 @@ export const api = {
 
   getReportDownloadUrl(scanId: number): string {
     return `${API_BASE_URL}/api/reports/${scanId}/download`;
+  },
+
+  getCompareReportUrl(locationIds: number[]): string {
+    return `${API_BASE_URL}/api/reports/compare/download?location_ids=${locationIds.join(",")}`;
+  },
+
+  getLocationReportUrl(locationId: number): string {
+    return `${API_BASE_URL}/api/reports/location/${locationId}/download`;
+  },
+
+  async getHotspots(): Promise<HotspotItem[]> {
+    const res = await fetch(`${API_BASE_URL}/api/hotspots`, { cache: "no-store" });
+    if (!res.ok) throw new Error("Failed to fetch hotspots");
+    return res.json();
+  },
+
+  async getHotspotReport(locationId: number): Promise<{ pdf_path: string; scan_id: number; location_id: number }> {
+    const res = await fetch(`${API_BASE_URL}/api/hotspots/${locationId}/report`, { cache: "no-store" });
+    if (!res.ok) throw new Error("No report available for this location");
+    return res.json();
+  },
+
+  async generateAIChangeReport(params: {
+    location_id: number;
+    location_name: string;
+    state: string;
+    minerals: string;
+    forest_trend: string;
+    total_area_ha: number;
+    avg_confidence: number;
+    detections: HotspotDetection[];
+    years?: number;
+  }): Promise<AIReportResponse> {
+    const res = await fetch(`${API_BASE_URL}/api/ai/change-report`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...params, years: params.years ?? 5 }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ detail: "AI report generation failed" }));
+      throw new Error(err.detail || "AI report generation failed");
+    }
+    return res.json();
   },
 
   getAssetUrl(relativePath?: string | null): string {
