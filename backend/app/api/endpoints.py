@@ -606,6 +606,29 @@ def get_analysis_geojson(scan_id: int, session: Session = Depends(get_session)):
     return JSONResponse(content=data)
 
 
+# ── All Detections Listing (Fast batch map telemetry) ──────
+@router.get("/detections")
+def get_all_detections(session: Session = Depends(get_session)):
+    """Return all detections across all scans with polygon geometries for high-performance map rendering."""
+    detections = session.exec(select(Detection)).all()
+    results = []
+    for d in detections:
+        results.append({
+            "id": d.id,
+            "scan_id": d.scan_id,
+            "change_type": d.change_type,
+            "confidence": d.confidence,
+            "area_hectares": d.area_hectares,
+            "centroid_lat": d.centroid_lat,
+            "centroid_lon": d.centroid_lon,
+            "polygon": d.get_polygon(),
+            "bbox": d.get_bbox(),
+            "area_pixels": d.area_pixels,
+            "mean_intensity": d.mean_change_intensity,
+        })
+    return results
+
+
 # ── Scans Listing ─────────────────────────────────────────
 @router.get("/scans", response_model=List[ScanResponse])
 def get_all_scans(session: Session = Depends(get_session)):

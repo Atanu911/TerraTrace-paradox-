@@ -55,6 +55,13 @@ export default function Photorealistic3DGlobe({
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapboxMap | null>(null);
   const markersRef = useRef<MapboxMarker[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const mapboxglRef = useRef<any>(null);
+  const targetMarkerRef = useRef<MapboxMarker | null>(null);
+  const onSelectLocationRef = useRef(onSelectLocation);
+  useEffect(() => {
+    onSelectLocationRef.current = onSelectLocation;
+  });
 
   const [activeEngine, setActiveEngine] = useState<"mapbox-globe" | "google-earth">("mapbox-globe");
   const [isRotating, setIsRotating] = useState<boolean>(true);
@@ -95,7 +102,18 @@ export default function Photorealistic3DGlobe({
     async function loadRealData() {
       try {
         setLoadingData(true);
-        const scanList = scans.length > 0 ? scans : await api.getScans();
+        // Fast batch telemetry fetch first
+        try {
+          const detections = await api.getAllDetections();
+          if (active && Array.isArray(detections) && detections.length > 0) {
+            setAllDetections(detections);
+            return;
+          }
+        } catch {
+          // fallback to scan-by-scan
+        }
+
+        const scanList = scans.length > 0 ? scans : await api.getScans().catch(() => []);
         const completedScans = scanList.filter((s) => s.status === "completed" || s.detection_count > 0);
 
         const results = await Promise.all(
@@ -111,9 +129,11 @@ export default function Photorealistic3DGlobe({
             collected.push(...res.detections);
           }
         }
-        setAllDetections(collected);
+        if (collected.length > 0) {
+          setAllDetections(collected);
+        }
       } catch (err) {
-        console.error("Failed to load real detections:", err);
+        console.warn("Failed to load real detections:", err);
       } finally {
         if (active) setLoadingData(false);
       }
@@ -192,6 +212,7 @@ export default function Photorealistic3DGlobe({
 
     import("mapbox-gl").then(({ default: mapboxgl }) => {
       if (disposed || !containerRef.current) return;
+      mapboxglRef.current = mapboxgl;
       mapboxgl.accessToken = token;
 
       map = new mapboxgl.Map({
@@ -235,23 +256,27 @@ export default function Photorealistic3DGlobe({
         }
 
         // ── 1. REAL GFW SATELLITE DEFORESTATION ALERTS (PAST 1 YEAR) ──
-        map.addSource("gfw-forest-alerts", {
-          type: "raster",
-          tiles: [
-            `https://tiles.globalforestwatch.org/umd_glad_landsat_alerts/latest/dynamic/{z}/{x}/{y}.png?start_date=${oneYearDates.startIso}&end_date=${oneYearDates.endIso}&confirmed_only=false`,
-          ],
-          tileSize: 256,
-          attribution: "GLAD alerts · Global Forest Watch",
-        });
+        try {
+          map.addSource("gfw-forest-alerts", {
+            type: "raster",
+            tiles: [
+              `https://tiles.globalforestwatch.org/umd_glad_landsat_alerts/latest/dynamic/{z}/{x}/{y}.png?start_date=${oneYearDates.startIso}&end_date=${oneYearDates.endIso}&confirmed_only=false`,
+            ],
+            tileSize: 256,
+            attribution: "GLAD alerts · Global Forest Watch",
+          });
 
-        map.addLayer({
-          id: "gfw-forest-alerts-layer",
-          type: "raster",
-          source: "gfw-forest-alerts",
-          paint: {
-            "raster-opacity": layerVisibility.deforestation ? 0.75 : 0,
-          },
-        });
+          map.addLayer({
+            id: "gfw-forest-alerts-layer",
+            type: "raster",
+            source: "gfw-forest-alerts",
+            paint: {
+              "raster-opacity": layerVisibility.deforestation ? 0.75 : 0,
+            },
+          });
+        } catch {
+          // Ignore external raster tile source error if uncontactable
+        }
 
         // ── 2. REAL DETECTIONS DATA SOURCE ──────────────────────────
         map.addSource("terratrace-detections", {
@@ -451,7 +476,7 @@ export default function Photorealistic3DGlobe({
           </div>
         `;
 
-        const targetMarker = new mapboxgl.Marker({ element: targetEl })
+        targetMarkerRef.current = new mapboxgl.Marker({ element: targetEl })
           .setLngLat(DEFAULT_CENTER)
           .setPopup(
             new mapboxgl.Popup({ offset: 20 }).setHTML(`
@@ -463,46 +488,57 @@ export default function Photorealistic3DGlobe({
             `)
           )
           .addTo(map);
-        markersRef.current.push(targetMarker);
-
-        // Add Database Locations Pins
-        locations.forEach((loc) => {
-          const locEl = document.createElement("div");
-          locEl.className = "ge-loc-pin cursor-pointer";
-          locEl.innerHTML = `
-            <div class="relative flex items-center justify-center">
-              <span class="absolute h-6 w-6 rounded-full bg-emerald-400/30 animate-pulse"></span>
-              <span class="relative h-3 w-3 rounded-full bg-emerald-400 border border-white"></span>
-            </div>
-          `;
-
-          const m = new mapboxgl.Marker({ element: locEl })
-            .setLngLat([loc.longitude, loc.latitude])
-            .setPopup(
-              new mapboxgl.Popup({ offset: 16 }).setHTML(`
-                <div class="font-mono text-xs p-1">
-                  <strong class="text-emerald-300 block font-bold">${loc.name}</strong>
-                  <span class="text-slate-300 text-[10px]">${loc.latitude.toFixed(4)}°N, ${loc.longitude.toFixed(4)}°E</span>
-                  <p class="text-slate-400 text-[10px] mt-1">${loc.description || "Active monitoring perimeter"}</p>
-                </div>
-              `)
-            )
-            .addTo(map!);
-          locEl.addEventListener("click", () => onSelectLocation?.(loc));
-          markersRef.current.push(m);
-        });
       });
     });
 
     return () => {
       disposed = true;
+      targetMarkerRef.current?.remove();
+      targetMarkerRef.current = null;
       markersRef.current.forEach((m) => m.remove());
       markersRef.current = [];
       mapRef.current?.remove();
       mapRef.current = null;
+      setMapLoaded(false);
       if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
     };
-  }, [token, locations, onSelectLocation, oneYearDates]);
+  }, [token, oneYearDates]);
+
+  // Synchronize location markers without tearing down WebGL canvas
+  useEffect(() => {
+    const map = mapRef.current;
+    const mb = mapboxglRef.current;
+    if (!map || !mapLoaded || !mb) return;
+
+    markersRef.current.forEach((m) => m.remove());
+    markersRef.current = [];
+
+    locations.forEach((loc) => {
+      const locEl = document.createElement("div");
+      locEl.className = "ge-loc-pin cursor-pointer";
+      locEl.innerHTML = `
+        <div class="relative flex items-center justify-center">
+          <span class="absolute h-6 w-6 rounded-full bg-emerald-400/30 animate-pulse"></span>
+          <span class="relative h-3 w-3 rounded-full bg-emerald-400 border border-white"></span>
+        </div>
+      `;
+
+      const m = new mb.Marker({ element: locEl })
+        .setLngLat([loc.longitude, loc.latitude])
+        .setPopup(
+          new mb.Popup({ offset: 16 }).setHTML(`
+            <div class="font-mono text-xs p-1">
+              <strong class="text-emerald-300 block font-bold">${loc.name}</strong>
+              <span class="text-slate-300 text-[10px]">${loc.latitude.toFixed(4)}°N, ${loc.longitude.toFixed(4)}°E</span>
+              <p class="text-slate-400 text-[10px] mt-1">${loc.description || "Active monitoring perimeter"}</p>
+            </div>
+          `)
+        )
+        .addTo(map);
+      locEl.addEventListener("click", () => onSelectLocationRef.current?.(loc));
+      markersRef.current.push(m);
+    });
+  }, [locations, mapLoaded]);
 
   // Update dynamic GeoJSON data whenever allDetections changes
   useEffect(() => {

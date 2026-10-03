@@ -356,6 +356,13 @@ export const api = {
     return res.json();
   },
 
+  // All Detections (Batch telemetry)
+  async getAllDetections(): Promise<DetectionItem[]> {
+    const res = await fetch(`${API_BASE_URL}/api/detections`, { cache: "no-store" });
+    if (!res.ok) throw new Error("Failed to fetch detections");
+    return res.json();
+  },
+
   // Upload
   async uploadScan(formData: FormData): Promise<{ scan_id: number; message: string }> {
     const res = await fetch(`${API_BASE_URL}/api/upload`, {

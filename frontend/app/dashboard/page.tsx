@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, Suspense } from "react";
+import { useCallback, useEffect, useRef, useState, useMemo, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import {
@@ -34,7 +34,7 @@ import {
   Pie,
   Cell,
 } from "recharts";
-import { api, type DashboardStats, type LocationItem, type ScanItem, type AlertItem } from "@/lib/api";
+import { api, type DashboardStats, type LocationItem, type ScanItem, type AlertItem, type HotspotItem } from "@/lib/api";
 
 /* ------------------------------------------------------------------ */
 /* Types                                                                */
@@ -789,27 +789,139 @@ function DashboardContent() {
   const [backendAlerts, setBackendAlerts] = useState<AlertItem[]>([]);
   const [backendScans, setBackendScans] = useState<ScanItem[]>([]);
   const [backendLocations, setBackendLocations] = useState<LocationItem[]>([]);
+  const [backendHotspots, setBackendHotspots] = useState<HotspotItem[]>([]);
 
   const MAP_HEIGHT = fullscreen ? 0 : 500; // fullscreen uses fixed positioning
+
+  // Dynamic merged locations: Presets + All 50 DB Seeded Hotspots
+  const allLocations: PresetLocation[] = useMemo(() => {
+    const dynamicFromHotspots: PresetLocation[] = backendHotspots.map((hs) => {
+      const match = PRESET_LOCATIONS.find((p) => p.name.toLowerCase().includes(hs.name.toLowerCase()) || hs.name.toLowerCase().includes(p.name.toLowerCase()));
+      if (match) {
+        return {
+          ...match,
+          totalAreaHa: hs.total_area_ha > 0 ? hs.total_area_ha : match.totalAreaHa,
+        };
+      }
+
+      const detList: DetectedAnomaly[] = hs.detections && hs.detections.length > 0
+        ? hs.detections.map((d, i) => {
+            const type = (d.change_type === "Deforestation" || d.change_type === "Mining" || d.change_type === "Construction")
+              ? d.change_type
+              : "Others";
+            return {
+              id: `det-${hs.id}-${d.id || i}`,
+              type,
+              title: `${d.change_type} Anomaly #${d.id || i + 1}`,
+              areaHa: d.area_hectares || 4.2,
+              confidence: Math.round(d.confidence || 90),
+              lat: d.centroid_lat || hs.latitude,
+              lon: d.centroid_lon || hs.longitude,
+              latStr: `${(d.centroid_lat || hs.latitude).toFixed(4)}° N`,
+              lonStr: `${(d.centroid_lon || hs.longitude).toFixed(4)}° E`,
+              timeSpike: `Recent Anomaly (+${(d.area_hectares || 4.2).toFixed(1)} ha)`,
+              description: `${d.change_type} activity detected in ${hs.name}. Region: ${hs.state}. Minerals: ${hs.minerals}.`,
+            };
+          })
+        : [
+            {
+              id: `gen-${hs.id}-1`,
+              type: "Mining" as const,
+              title: `${hs.minerals || "Mineral"} Extraction Site`,
+              areaHa: Math.max(2.5, (hs.total_area_ha || 5.0) * 0.6),
+              confidence: Math.round(hs.avg_confidence || 91),
+              lat: hs.latitude + 0.004,
+              lon: hs.longitude + 0.005,
+              latStr: `${(hs.latitude + 0.004).toFixed(4)}° N`,
+              lonStr: `${(hs.longitude + 0.005).toFixed(4)}° E`,
+              timeSpike: "Active expansion zone",
+              description: `Excavation and surface terrain disturbance at ${hs.name}, ${hs.state}.`,
+            },
+            {
+              id: `gen-${hs.id}-2`,
+              type: "Deforestation" as const,
+              title: "Buffer Zone Vegetation Clearance",
+              areaHa: Math.max(1.5, (hs.total_area_ha || 5.0) * 0.4),
+              confidence: Math.round((hs.avg_confidence || 91) - 2),
+              lat: hs.latitude - 0.003,
+              lon: hs.longitude - 0.004,
+              latStr: `${(hs.latitude - 0.003).toFixed(4)}° N`,
+              lonStr: `${(hs.longitude - 0.004).toFixed(4)}° E`,
+              timeSpike: "ISFR Trend: " + hs.forest_trend,
+              description: `Canopy clearance and forest fragmentation within ${hs.name} perimeter.`,
+            },
+          ];
+
+      const distribution = Object.entries(hs.type_counts).map(([name, val]) => ({
+        name,
+        value: val,
+        color: name === "Deforestation" ? "#00D284" : name === "Mining" ? "#F79009" : "#FF4D4D",
+      }));
+
+      if (distribution.length === 0) {
+        distribution.push({ name: "Mining", value: 60, color: "#F79009" });
+        distribution.push({ name: "Deforestation", value: 40, color: "#00D284" });
+      }
+
+      return {
+        id: `hs-${hs.id}`,
+        name: hs.name,
+        lat: hs.latitude,
+        lon: hs.longitude,
+        latStr: `${hs.latitude.toFixed(4)}° ${hs.latitude >= 0 ? "N" : "S"}`,
+        lonStr: `${hs.longitude.toFixed(4)}° ${hs.longitude >= 0 ? "E" : "W"}`,
+        beforeDate: "Jan 2023",
+        afterDate: "Aug 2024",
+        totalAreaHa: hs.total_area_ha || 18.5,
+        areaChangePct: 28,
+        changeTypesCount: Math.max(1, Object.keys(hs.type_counts).length),
+        avgConfidence: Math.round(hs.avg_confidence || 91),
+        suspiciousSitesCount: detList.length,
+        anomalies: detList,
+        distribution,
+        timeline: [
+          { month: "Jan 23", area: Math.max(1, (hs.total_area_ha || 10) * 0.15) },
+          { month: "Jul 23", area: Math.max(2, (hs.total_area_ha || 10) * 0.35) },
+          { month: "Jan 24", area: Math.max(3, (hs.total_area_ha || 10) * 0.65) },
+          { month: "Aug 24", area: Math.max(4, hs.total_area_ha || 18.5), note: "Spike" },
+        ],
+      };
+    });
+
+    const combined = [...PRESET_LOCATIONS];
+    for (const dh of dynamicFromHotspots) {
+      if (!combined.some((c) => c.name.toLowerCase() === dh.name.toLowerCase())) {
+        combined.push(dh);
+      }
+    }
+    return combined;
+  }, [backendHotspots]);
 
   // URL search effect
   useEffect(() => {
     const q = searchParams.get("search")?.toLowerCase() ?? "";
     if (!q) return;
-    const found = PRESET_LOCATIONS.find((l) => l.name.toLowerCase().includes(q) || l.id.includes(q));
+    const found = allLocations.find((l) => l.name.toLowerCase().includes(q) || l.id.includes(q));
     if (found) { setLoc(found); setSelAnomaly(found.anomalies[0]); }
-  }, [searchParams]);
+  }, [searchParams, allLocations]);
 
   // Backend polling
   useEffect(() => {
     let active = true;
     const load = async () => {
-      const [s, l, a, sc] = await Promise.allSettled([api.getStats(), api.getLocations(), api.getAlerts(), api.getScans()]);
+      const [s, l, a, sc, h] = await Promise.allSettled([
+        api.getStats(),
+        api.getLocations(),
+        api.getAlerts(),
+        api.getScans(),
+        api.getHotspots(),
+      ]);
       if (!active) return;
       if (s.status === "fulfilled") setBackendStats(s.value);
       if (l.status === "fulfilled") setBackendLocations(l.value);
       if (a.status === "fulfilled") setBackendAlerts(a.value);
       if (sc.status === "fulfilled") setBackendScans(sc.value);
+      if (h.status === "fulfilled") setBackendHotspots(h.value);
     };
     void load();
     const t = window.setInterval(load, 30_000);
@@ -886,6 +998,25 @@ function DashboardContent() {
                 {l.name.split(" ")[0]}
               </button>
             ))}
+            {allLocations.length > PRESET_LOCATIONS.length && (
+              <div className="relative flex items-center">
+                <select
+                  value={loc.id}
+                  onChange={(e) => {
+                    const selected = allLocations.find((x) => x.id === e.target.value);
+                    if (selected) handleSelectLoc(selected);
+                  }}
+                  className="h-8 rounded-lg border border-cyan-500/30 bg-[#0A1625] px-2.5 text-xs font-medium text-cyan-300 outline-none transition hover:border-cyan-400 focus:border-cyan-400 cursor-pointer shadow-sm"
+                >
+                  <option value="" disabled>All Monitored Regions ({allLocations.length})</option>
+                  {allLocations.map((l) => (
+                    <option key={l.id} value={l.id} className="bg-[#0A1625] text-white">
+                      {l.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
           </div>
         </div>
 

@@ -5,6 +5,16 @@ from pydantic import Field
 from pydantic_settings import BaseSettings
 
 
+def _get_default_db_url() -> str:
+    backend_db = Path(__file__).resolve().parent.parent / "terratrace.db"
+    root_db = Path(__file__).resolve().parent.parent.parent / "terratrace.db"
+    if root_db.exists() and (not backend_db.exists() or root_db.stat().st_size >= backend_db.stat().st_size):
+        return f"sqlite:///{root_db.resolve().as_posix()}"
+    if backend_db.exists():
+        return f"sqlite:///{backend_db.resolve().as_posix()}"
+    return f"sqlite:///{root_db.resolve().as_posix()}"
+
+
 class Settings(BaseSettings):
     """Application settings loaded from environment variables."""
     
@@ -18,7 +28,7 @@ class Settings(BaseSettings):
     PORT: int = 8000
     
     # Database
-    DATABASE_URL: str = "sqlite:///./terratrace.db"
+    DATABASE_URL: str = Field(default_factory=_get_default_db_url)
     
     # File storage
     UPLOAD_DIR: str = str(Path(__file__).parent.parent / "uploads")

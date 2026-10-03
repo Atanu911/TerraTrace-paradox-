@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   Activity, AlertTriangle, ArrowUpRight, BellRing, CalendarDays, ChevronRight,
@@ -8,7 +8,7 @@ import {
   Leaf, MapPin, Pickaxe, Radar, Search, TreePine, X, CheckSquare, Square,
   BarChart3, Shield
 } from "lucide-react";
-import { api, type AlertItem, type DashboardStats, type HotspotItem, type ScanItem } from "@/lib/api";
+import { api, type AlertItem, type DashboardStats, type HotspotItem, type ScanItem, type LocationItem } from "@/lib/api";
 import Photorealistic3DGlobe from "@/components/map/Photorealistic3DGlobe";
 import LocationMapModal from "@/components/map/LocationMapModal";
 
@@ -93,17 +93,27 @@ export default function GlobeOverviewView() {
     return matchesSearch && matchesFilter;
   });
 
-  // Map locations shape for the 3D globe
-  const mapLocations = filteredHotspots.map((h) => ({
-    id: h.id,
-    name: h.name,
-    latitude: h.latitude,
-    longitude: h.longitude,
-    description: h.description,
-    created_at: new Date().toISOString(),
-    scan_count: h.detections.length,
-    latest_scan_status: "completed" as const,
-  }));
+  // Map locations shape for the 3D globe (memoized to prevent teardown of WebGL context)
+  const mapLocations: LocationItem[] = useMemo(() => {
+    return filteredHotspots.map((h) => ({
+      id: h.id,
+      name: h.name,
+      latitude: h.latitude,
+      longitude: h.longitude,
+      description: h.description,
+      created_at: "",
+      scan_count: h.detections.length,
+      latest_scan_status: "completed" as const,
+    }));
+  }, [filteredHotspots]);
+
+  const handleSelectGlobeLocation = useCallback((loc: LocationItem) => {
+    const h = hotspots.find((x) => x.id === loc.id);
+    if (h) {
+      setSelectedHotspot(h);
+      setMapModalHotspot(h);
+    }
+  }, [hotspots]);
 
   const openHotspotReport = async (hotspot: HotspotItem) => {
     setSelectedHotspot(hotspot);
@@ -227,10 +237,7 @@ export default function GlobeOverviewView() {
               <Photorealistic3DGlobe
                 locations={mapLocations}
                 scans={scans}
-                onSelectLocation={(loc) => {
-                  const h = hotspots.find((x) => x.id === loc.id);
-                  if (h) openHotspotReport(h);
-                }}
+                onSelectLocation={handleSelectGlobeLocation}
               />
             </div>
           </section>
