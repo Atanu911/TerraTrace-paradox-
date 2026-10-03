@@ -1,0 +1,35 @@
+# Local secrets and environment configuration
+.env
+.env.*
+!.env.example
+
+# Python environments and generated files
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Local database and runtime image/report artifacts
+*.db
+*.sqlite
+*.sqlite3
+backend/uploads/*
+backend/outputs/*
+
+# JavaScript dependencies and build output
+node_modules/
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/build/
+*.tsbuildinfo
+frontend/next-env.d.ts
+
+# Editor and OS files
+.DS_Store
+.idea/
+.vscode/
+
+# Placeholder file, not an actual image asset
+assets/ui-reference/dashboard-target.png

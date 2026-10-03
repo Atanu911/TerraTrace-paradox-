@@ -1,0 +1,671 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap');
+@import "tailwindcss";
+
+:root {
+  color-scheme: dark;
+  --theme-bg: #06111b;
+  --theme-surface: rgba(10, 22, 38, 0.9);
+  --theme-panel: rgba(14, 30, 48, 0.82);
+  --theme-text: #e2e8f0;
+  --theme-muted: #94a3b8;
+  --theme-accent: #22d3ee;
+  --theme-border: rgba(80, 140, 255, 0.28);
+  --theme-glow-alpha: 0.22;
+  --visual-intensity: 0.5;
+  --sidebar-bg: rgba(6, 17, 27, .97);
+  --sidebar-surface: rgba(12, 28, 44, .94);
+  --sidebar-text: #e2e8f0;
+  --sidebar-muted: #94a3b8;
+  --sidebar-active: rgba(34, 211, 150, .13);
+  --sidebar-accent: #22d3aa;
+  --sidebar-edge: rgba(255,255,255,.09);
+  --sidebar-hover: rgba(255,255,255,.06);
+  --ink: #0B1B3A;
+  --blue: #1F6BFF;
+  --blue-glow: rgba(31, 107, 255, 0.4);
+  --cyan: #22D3EE;
+  --cyan-glow: rgba(34, 211, 238, 0.4);
+  --panel-dark: #0A1630;
+  --panel-darker: #060E20;
+  --panel-card: rgba(14, 30, 62, 0.75);
+  --panel-border: rgba(80, 140, 255, 0.28);
+  --ice: #F3F8FF;
+  --forest: #22C55E;
+  --alert: #FF2D3D;
+  --mining: #F5B301;
+  --violet: #8B5CF6;
+  
+  --font-display: 'Space Grotesk', sans-serif;
+  --font-body: 'Inter', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+:root[data-theme="midnight"] { --theme-bg:#050914; --theme-surface:rgba(8,12,26,.94); --theme-panel:rgba(13,19,39,.88); --theme-accent:#9b8cff; --theme-border:rgba(142,124,255,.32); --sidebar-bg:#090b19; --sidebar-surface:#111329; --sidebar-active:rgba(155,140,255,.16); --sidebar-accent:#b0a6ff; --sidebar-edge:rgba(155,140,255,.2); --sidebar-hover:rgba(155,140,255,.08); }
+:root[data-theme="ocean"] { --theme-bg:#06111b; --theme-surface:rgba(10,22,38,.92); --theme-panel:rgba(14,30,48,.84); --theme-accent:#22d3ee; --theme-border:rgba(80,180,220,.3); --sidebar-bg:#07141f; --sidebar-surface:#0c1c2c; --sidebar-active:rgba(34,211,238,.13); --sidebar-accent:#22d3ee; --sidebar-edge:rgba(80,180,220,.2); --sidebar-hover:rgba(34,211,238,.07); }
+:root[data-theme="earth"] { --theme-bg:#11140f; --theme-surface:rgba(27,31,22,.94); --theme-panel:rgba(37,43,29,.87); --theme-accent:#a3d977; --theme-border:rgba(163,217,119,.3); --sidebar-bg:#14180f; --sidebar-surface:#202719; --sidebar-active:rgba(163,217,119,.14); --sidebar-accent:#b3e487; --sidebar-edge:rgba(163,217,119,.2); --sidebar-hover:rgba(163,217,119,.07); }
+:root[data-theme="daylight"] { color-scheme:light; --theme-bg:#edf1e8; --theme-surface:rgba(248,249,241,.97); --theme-panel:rgba(250,251,245,.96); --theme-text:#26352b; --theme-muted:#617165; --theme-accent:#287653; --theme-border:rgba(77,111,82,.25); --theme-glow-alpha:.07; --sidebar-bg:#f5f6ef; --sidebar-surface:#fbfcf7; --sidebar-text:#26352b; --sidebar-muted:#68786c; --sidebar-active:rgba(62,125,82,.12); --sidebar-accent:#287653; --sidebar-edge:#d9e1d2; --sidebar-hover:#eaf0e5; }
+:root[data-theme="high-contrast"] { --theme-bg:#000; --theme-surface:#050505; --theme-panel:#080808; --theme-text:#fff; --theme-muted:#e7e7e7; --theme-accent:#00ffff; --theme-border:#fff; --theme-glow-alpha:0; --sidebar-bg:#000; --sidebar-surface:#050505; --sidebar-text:#fff; --sidebar-muted:#fff; --sidebar-active:#001c1c; --sidebar-accent:#0ff; --sidebar-edge:#fff; --sidebar-hover:#161616; }
+:root[data-theme="auto"] { color-scheme:dark; }
+@media (prefers-color-scheme: light) { :root[data-theme="auto"] { color-scheme:light; --theme-bg:#edf1e8; --theme-surface:rgba(248,249,241,.97); --theme-panel:rgba(250,251,245,.96); --theme-text:#26352b; --theme-muted:#617165; --theme-accent:#287653; --theme-border:rgba(77,111,82,.25); --theme-glow-alpha:.07; --sidebar-bg:#f5f6ef; --sidebar-surface:#fbfcf7; --sidebar-text:#26352b; --sidebar-muted:#68786c; --sidebar-active:rgba(62,125,82,.12); --sidebar-accent:#287653; --sidebar-edge:#d9e1d2; --sidebar-hover:#eaf0e5; } }
+
+body {
+  position: relative;
+  isolation: isolate;
+  background-color: var(--theme-bg);
+  color: var(--theme-text);
+  font-family: var(--font-body);
+  overflow-x: hidden;
+  selection-background-color: var(--theme-accent);
+  selection-color: #FFFFFF;
+}
+
+.site-background {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  isolation:isolate;
+  pointer-events: none;
+  opacity: calc(0.28 + var(--visual-intensity) * 0.72);
+  background-image:
+    linear-gradient(112deg, color-mix(in srgb, var(--theme-bg) 88%, transparent) 0%, color-mix(in srgb, var(--theme-bg) 82%, transparent) 48%, color-mix(in srgb, var(--theme-bg) 91%, transparent) 100%),
+    url("/earth-observation-drone.jpeg");
+  background-position: center, 72% 40%;
+  background-size: cover;
+  background-attachment: fixed;
+}
+
+.ambient-orbit-canvas { position:absolute; width:1px; height:1px; opacity:0; pointer-events:none; }
+.site-background-video { position:absolute; inset:0; z-index:0; width:100%; height:100%; object-fit:cover; opacity:.12; mix-blend-mode:screen; pointer-events:none; }
+.site-background::before { position:absolute; inset:-35% 0 auto; height:42%; content:""; pointer-events:none; background:linear-gradient(180deg,transparent,rgba(42,208,180,.075),rgba(42,208,180,.018),transparent); filter:blur(8px); animation:earth-observation-sweep 24s ease-in-out infinite; }
+
+.site-background::after {
+  position: absolute;
+  inset: 0;
+  content: "";
+  background-image:
+    repeating-linear-gradient(0deg, transparent 0 79px, rgba(89, 191, 199, 0.025) 80px),
+    linear-gradient(90deg, rgba(4, 15, 25, 0.18), transparent 58%, rgba(7, 37, 43, 0.2));
+}
+
+h1, h2, h3, h4, .font-display {
+  font-family: var(--font-display);
+}
+
+code, pre, .font-mono {
+  font-family: var(--font-mono);
+}
+
+/* Glassmorphism primitives */
+.glass-panel {
+  position: relative;
+  isolation: isolate;
+  background: linear-gradient(135deg, rgba(14, 30, 62, 0.8) 0%, rgba(9, 21, 46, 0.85) 100%);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(80, 140, 255, 0.22);
+  box-shadow: 0 8px 32px 0 rgba(0, 8, 28, 0.37);
+  transition: border-color 220ms ease, box-shadow 260ms ease, background-color 220ms ease;
+}
+
+.glass-panel:hover,
+.glass-card:hover {
+  border-color: color-mix(in srgb, var(--theme-accent) 55%, transparent);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb,var(--theme-accent) 15%,transparent) inset,
+    0 14px 40px rgba(7, 35, 61, 0.34),
+    0 0 calc(36px * var(--visual-intensity)) color-mix(in srgb,var(--theme-accent) 22%,transparent);
+  transform:translateY(-2px);
+}
+
+@media (hover:hover) and (prefers-reduced-motion:no-preference) {
+  main button:not(:disabled),main a,.app-sidebar-link,.terra-core-button { transition:color 180ms ease,background-color 180ms ease,border-color 180ms ease,box-shadow 220ms ease,transform 220ms cubic-bezier(.2,.75,.25,1); }
+  main button:not(:disabled):hover,main a:hover { box-shadow:0 0 calc(26px * var(--visual-intensity)) color-mix(in srgb,var(--theme-accent) 26%,transparent); }
+  main button:not(:disabled):active,main a:active { transform:translateY(0) scale(.985); }
+}
+
+.glass-panel-hover {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.glass-panel-hover:hover {
+  border-color: rgba(34, 211, 238, 0.5);
+  box-shadow: 0 12px 40px 0 rgba(31, 107, 255, 0.22);
+  transform: translateY(-2px);
+}
+
+.glass-card {
+  position: relative;
+  isolation: isolate;
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: border-color 220ms ease, box-shadow 260ms ease, background-color 220ms ease;
+}
+
+.glass-panel::before,
+.glass-card::before {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  content: "";
+  background:
+    linear-gradient(120deg, rgba(4, 13, 28, 0.9), rgba(4, 17, 31, 0.78)),
+    url("/earth-observation-drone.jpeg") center / cover no-repeat;
+  opacity: calc(0.04 + var(--visual-intensity) * 0.3);
+  animation: content-image-drift 38s ease-in-out infinite alternate;
+}
+
+.before-after-frame-overlay {
+  background: url("/before-after-frame.png") center / 100% auto no-repeat;
+  mix-blend-mode: screen;
+  opacity: 0.72;
+}
+
+/* Terra Core theme control */
+.terra-core { position: relative; z-index: 60; }
+.terra-core-button { display:flex; width:42px; height:42px; align-items:center; justify-content:center; border:1px solid var(--theme-border); border-radius:9999px; color:var(--theme-accent); background:var(--theme-surface); box-shadow:0 0 calc(24px * var(--visual-intensity)) color-mix(in srgb, var(--theme-accent) 28%, transparent); transition:transform 180ms ease, background-color 180ms ease, box-shadow 180ms ease; }
+.terra-core-button:hover { transform:rotate(12deg) scale(1.04); }
+.terra-core-button:focus-visible,.terra-core-panel button:focus-visible,.terra-core-panel input:focus-visible { outline:3px solid var(--theme-accent); outline-offset:3px; }
+.terra-core-panel { position:absolute; right:0; top:calc(100% + 10px); width:min(340px,calc(100vw - 24px)); padding:16px; border:1px solid var(--theme-border); border-radius:16px; color:var(--theme-text); background:var(--theme-surface); box-shadow:0 18px 48px rgba(0,0,0,.45); backdrop-filter:blur(20px); }
+.terra-core-heading { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+.terra-core-heading strong,.terra-core-heading span { display:block; }
+.terra-core-heading span,.terra-core-range-labels { color:var(--theme-muted); font-size:12px; }
+.terra-core-heading button { color:var(--theme-muted); font-size:24px; line-height:1; padding:4px 8px; }
+.terra-core-panel fieldset { border:0; padding:0; margin:0 0 16px; }
+.terra-core-panel legend,.terra-core-intensity { display:block; width:100%; margin-bottom:8px; font-size:13px; font-weight:600; }
+.terra-core-modes { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:7px; margin-top:9px; }
+.terra-core-modes button { border:1px solid var(--theme-border); border-radius:9px; padding:8px 10px; color:var(--theme-muted); text-align:left; font-size:13px; }
+.terra-core-modes button.selected { border-color:var(--theme-accent); color:var(--theme-accent); background:color-mix(in srgb,var(--theme-accent) 12%,transparent); }
+.terra-core-intensity output { float:right; color:var(--theme-accent); font-family:var(--font-mono); }
+.terra-core-intensity input { display:block; width:100%; accent-color:var(--theme-accent); margin-top:11px; }
+.terra-core-range-labels { display:flex; justify-content:space-between; font-weight:400; }
+.terra-core-check { display:flex; align-items:center; gap:9px; margin-top:12px; color:var(--theme-muted); font-size:13px; }
+.terra-core-check input { accent-color:var(--theme-accent); }
+
+/* Sidebar uses the same theme tokens as the rest of the application. */
+.app-sidebar { isolation:isolate; color:var(--sidebar-text); background:var(--sidebar-bg); border-right:1px solid var(--sidebar-edge); box-shadow:12px 0 36px rgba(0,0,0,.12); }
+.app-sidebar::before { position:absolute; inset:0; z-index:-1; content:""; pointer-events:none; background-image:linear-gradient(180deg,color-mix(in srgb,var(--sidebar-surface) 82%,transparent),color-mix(in srgb,var(--sidebar-bg) 86%,transparent)),url("/earth-observation-drone.jpeg"); background-position:center,58% 34%; background-size:cover; background-repeat:no-repeat; }
+.app-sidebar-header { border-bottom:1px solid var(--sidebar-edge); }
+.app-sidebar-mark { border:1px solid color-mix(in srgb,var(--sidebar-accent) 40%,transparent); background:color-mix(in srgb,var(--sidebar-accent) 11%,var(--sidebar-bg)); color:var(--sidebar-accent); box-shadow:0 0 18px color-mix(in srgb,var(--sidebar-accent) 13%,transparent); }
+.app-sidebar-title { color:var(--sidebar-text); }
+.app-sidebar-title span { color:var(--sidebar-accent); }
+.app-sidebar-tagline { color:var(--sidebar-muted); opacity:.82; }
+.app-sidebar-toggle { border:1px solid var(--sidebar-edge); color:var(--sidebar-muted); background:var(--sidebar-hover); }
+.app-sidebar-toggle:hover { color:var(--sidebar-text); background:color-mix(in srgb,var(--sidebar-accent) 10%,var(--sidebar-hover)); }
+.app-sidebar-link { color:var(--sidebar-muted); border:1px solid transparent; }
+.app-sidebar-link:hover { color:var(--sidebar-text); background:var(--sidebar-hover); border-color:var(--sidebar-edge); }
+.app-sidebar-link.active { color:var(--sidebar-text); border-color:color-mix(in srgb,var(--sidebar-accent) 34%,transparent); background:linear-gradient(105deg,var(--sidebar-active),color-mix(in srgb,var(--sidebar-accent) 4%,transparent)); box-shadow:inset 3px 0 0 var(--sidebar-accent),0 8px 22px color-mix(in srgb,var(--sidebar-accent) 8%,transparent); }
+.app-sidebar-link-icon { color:var(--sidebar-muted); }
+.app-sidebar-link:hover .app-sidebar-link-icon { color:var(--sidebar-text); }
+.app-sidebar-link-icon.active { color:var(--sidebar-accent); filter:drop-shadow(0 0 7px color-mix(in srgb,var(--sidebar-accent) 40%,transparent)); }
+.app-sidebar-description { color:var(--sidebar-muted); opacity:.84; }
+.app-sidebar-badge { color:#cf514b; background:rgba(207,81,75,.1); border:1px solid rgba(207,81,75,.28); }
+.app-sidebar-dot { background:#cf514b; border:2px solid var(--sidebar-bg); }
+.app-sidebar-footer { border-color:var(--sidebar-edge); }
+.app-sidebar-mission { border:1px solid color-mix(in srgb,var(--sidebar-accent) 24%,var(--sidebar-edge)); background:linear-gradient(135deg,color-mix(in srgb,var(--sidebar-accent) 10%,var(--sidebar-bg)),var(--sidebar-surface)); }
+.app-sidebar-mission-icon,.app-sidebar-mission-label { color:var(--sidebar-accent); }
+.app-sidebar-mission-copy { color:var(--sidebar-muted); }
+
+html[data-theme="daylight"] body { color:var(--theme-text); }
+html[data-theme="daylight"] .app-sidebar::before { background-image:linear-gradient(180deg,rgba(247,249,241,.88),rgba(241,245,235,.86)),url("/earth-observation-drone.jpeg"); }
+html[data-theme="daylight"] .glass-panel,html[data-theme="daylight"] .glass-card { background:var(--theme-panel)!important; border-color:var(--theme-border)!important; box-shadow:0 8px 28px rgba(20,45,60,.12); color:var(--theme-text); }
+html[data-theme="daylight"] .glass-panel::before,html[data-theme="daylight"] .glass-card::before { opacity:calc(.03 + var(--visual-intensity)*.12); }
+html[data-theme="daylight"] .text-white,html[data-theme="daylight"] .text-slate-100,html[data-theme="daylight"] .text-slate-200 { color:#172535!important; }
+html[data-theme="daylight"] .text-slate-300,html[data-theme="daylight"] .text-slate-400,html[data-theme="daylight"] .text-slate-500 { color:#526477!important; }
+html[data-theme="daylight"] header { background:rgba(248,249,241,.94)!important; border-color:var(--theme-border)!important; }
+html[data-theme="daylight"] input,html[data-theme="daylight"] select,html[data-theme="daylight"] textarea { color:#172535; }
+@media (prefers-color-scheme: light) {
+  html[data-theme="auto"] .glass-panel,html[data-theme="auto"] .glass-card { background:var(--theme-panel)!important; border-color:var(--theme-border)!important; color:var(--theme-text); }
+  html[data-theme="auto"] .app-sidebar::before { background-image:linear-gradient(180deg,rgba(247,249,241,.88),rgba(241,245,235,.86)),url("/earth-observation-drone.jpeg"); }
+  html[data-theme="auto"] .text-white,html[data-theme="auto"] .text-slate-100,html[data-theme="auto"] .text-slate-200 { color:#172535!important; }
+  html[data-theme="auto"] .text-slate-300,html[data-theme="auto"] .text-slate-400,html[data-theme="auto"] .text-slate-500 { color:#526477!important; }
+  html[data-theme="auto"] header { background:rgba(248,249,241,.94)!important; border-color:var(--theme-border)!important; }
+}
+html[data-theme="high-contrast"] .glass-panel,html[data-theme="high-contrast"] .glass-card { background:#050505!important; border:2px solid #fff!important; box-shadow:none!important; }
+html[data-theme="high-contrast"] .glass-panel::before,html[data-theme="high-contrast"] .glass-card::before { display:none; }
+html[data-theme="high-contrast"] .text-slate-300,html[data-theme="high-contrast"] .text-slate-400,html[data-theme="high-contrast"] .text-slate-500 { color:#fff!important; }
+html[data-theme="high-contrast"] button:focus-visible,html[data-theme="high-contrast"] a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible { outline:3px solid #ff0!important; outline-offset:3px; }
+@media (prefers-reduced-motion: reduce) { *,*::before,*::after { scroll-behavior:auto!important; animation-duration:.01ms!important; animation-iteration-count:1!important; transition-duration:.01ms!important; } }
+html[data-reduce-motion="true"] *,html[data-reduce-motion="true"] *::before,html[data-reduce-motion="true"] *::after { animation-duration:.01ms!important; animation-iteration-count:1!important; transition-duration:.01ms!important; scroll-behavior:auto!important; }
+
+@media (max-width:640px) { .terra-core-panel { position:fixed; top:72px; right:12px; } }
+
+@keyframes content-image-drift {
+  from { background-position: 50% 50%; }
+  to { background-position: 56% 44%; }
+}
+
+@keyframes earth-observation-sweep { 0%,100% { transform:translateY(-14vh); opacity:.35; } 50% { transform:translateY(125vh); opacity:.9; } }
+.map-evidence-popup { min-width:190px; color:#e5edf3; font:12px/1.45 Inter,sans-serif; }
+.map-evidence-popup strong { display:block; color:#fff; font-size:13px; }
+.map-evidence-popup p { margin:5px 0 0; color:#aab9c5; }
+.map-evidence-pair { display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-top:9px; }
+.map-evidence-pair img { display:block; width:112px; height:64px; object-fit:cover; border-radius:6px; }
+.map-evidence-pair span { display:block; margin-top:3px; color:#c9d7df; font-size:10px; }
+.mapboxgl-popup-content { background:rgba(5,16,25,.96)!important; border:1px solid rgba(44,207,176,.3); border-radius:12px!important; box-shadow:0 16px 40px rgba(0,0,0,.4)!important; padding:12px!important; }
+.mapboxgl-popup-tip { border-top-color:rgba(5,16,25,.96)!important; border-bottom-color:rgba(5,16,25,.96)!important; }
+
+/* HUD Frames & Corner brackets */
+.hud-corner-tl {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 12px;
+  height: 12px;
+  border-top: 2px solid var(--cyan);
+  border-left: 2px solid var(--cyan);
+}
+.hud-corner-tr {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 12px;
+  height: 12px;
+  border-top: 2px solid var(--cyan);
+  border-right: 2px solid var(--cyan);
+}
+.hud-corner-bl {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 12px;
+  height: 12px;
+  border-bottom: 2px solid var(--cyan);
+  border-left: 2px solid var(--cyan);
+}
+.hud-corner-br {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 12px;
+  height: 12px;
+  border-bottom: 2px solid var(--cyan);
+  border-right: 2px solid var(--cyan);
+}
+
+/* Scanline Animations */
+@keyframes scanline {
+  0% {
+    transform: translateY(-100%);
+  }
+  100% {
+    transform: translateY(1000%);
+  }
+}
+
+.scanline-beam {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent 0%, #22D3EE 50%, transparent 100%);
+  box-shadow: 0 0 12px #22D3EE;
+  animation: scanline 4s linear infinite;
+  opacity: 0.75;
+}
+
+.comparison-range {
+  appearance: none;
+  background: transparent;
+  opacity: 0;
+  touch-action: pan-y;
+}
+
+.comparison-range::-webkit-slider-runnable-track {
+  background: transparent;
+}
+
+.comparison-range::-webkit-slider-thumb {
+  appearance: none;
+  width: 40px;
+  height: 100%;
+  background: transparent;
+}
+
+.comparison-range::-moz-range-track,
+.comparison-range::-moz-range-progress {
+  background: transparent;
+}
+
+.comparison-range::-moz-range-thumb {
+  width: 40px;
+  height: 100%;
+  border: 0;
+  background: transparent;
+}
+
+.globe-texture-turn {
+  animation: globe-texture-turn 30s linear infinite;
+}
+
+.earth-hero-scene {
+  background-color: #06121c;
+  background-image:
+    linear-gradient(112deg, #06121c 0%, #0a202b 52%, #07141f 100%),
+    linear-gradient(150deg, transparent 25%, rgba(20, 112, 106, 0.18) 58%, transparent 78%);
+}
+
+.earth-hero-stars {
+  background-image:
+    radial-gradient(1px 1px at 8% 18%, rgba(188, 232, 240, 0.7) 98%, transparent),
+    radial-gradient(1px 1px at 17% 72%, rgba(115, 207, 223, 0.55) 98%, transparent),
+    radial-gradient(1px 1px at 29% 36%, rgba(220, 242, 239, 0.55) 98%, transparent),
+    radial-gradient(1px 1px at 42% 83%, rgba(137, 204, 215, 0.45) 98%, transparent),
+    radial-gradient(1.5px 1.5px at 58% 14%, rgba(222, 244, 239, 0.72) 98%, transparent),
+    radial-gradient(1px 1px at 67% 74%, rgba(116, 209, 198, 0.62) 98%, transparent),
+    radial-gradient(1px 1px at 81% 26%, rgba(194, 236, 238, 0.6) 98%, transparent),
+    radial-gradient(1px 1px at 93% 63%, rgba(120, 209, 220, 0.52) 98%, transparent);
+  background-size: 100% 100%;
+  opacity: 0.7;
+  animation: star-drift 48s ease-in-out infinite alternate;
+}
+
+.earth-hero-contours {
+  background-image: repeating-radial-gradient(
+    ellipse at 77% 53%,
+    transparent 0 22px,
+    rgba(74, 180, 184, 0.12) 23px 24px,
+    transparent 25px 43px
+  );
+  mask-image: linear-gradient(90deg, transparent 30%, #000 61%, #000 100%);
+  opacity: 0.7;
+}
+
+.earth-hero-horizon {
+  background: linear-gradient(0deg, rgba(4, 13, 21, 0.55), transparent);
+}
+
+@keyframes scroll-reveal {
+  from {
+    opacity: 0.62;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@supports (animation-timeline: view()) {
+  main > div > section,
+  main .glass-panel,
+  main .glass-card {
+    animation-name: scroll-reveal;
+    animation-duration: 1ms;
+    animation-timing-function: linear;
+    animation-fill-mode: both;
+    animation-timeline: view();
+    animation-range: entry 0% entry 28%;
+  }
+}
+
+@keyframes star-drift {
+  from { transform: translate3d(0, 0, 0); }
+  to { transform: translate3d(8px, -5px, 0); }
+}
+
+@keyframes globe-texture-turn {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+.landing-compare:has(.comparison-range:focus-visible) .comparison-divider > div {
+  outline: 3px solid #a7f3d0;
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scanline-beam,
+  .animate-pulse,
+  .animate-ping,
+  .globe-texture-turn,
+  .earth-hero-stars {
+    animation: none !important;
+  }
+
+  .glass-panel,
+  .glass-card,
+  .glass-panel-hover,
+  .map-control {
+    transition-duration: 0.01ms !important;
+  }
+
+  main > div > section,
+  main .glass-panel,
+  main .glass-card {
+    animation: none !important;
+  }
+}
+
+@keyframes pulse-subtle {
+  0%, 100% { opacity: 0.9; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(0.98); }
+}
+
+.animate-pulse-subtle {
+  animation: pulse-subtle 3s ease-in-out infinite;
+}
+
+@keyframes grid-move {
+  0% { background-position: 0 0; }
+  100% { background-position: 40px 40px; }
+}
+
+.cyber-grid {
+  background-size: 40px 40px;
+  background-image: 
+    linear-gradient(to right, rgba(31, 107, 255, 0.07) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(31, 107, 255, 0.07) 1px, transparent 1px);
+}
+
+/* Glow Utilities */
+.glow-cyan {
+  box-shadow: 0 0 25px -4px rgba(34, 211, 238, 0.45);
+}
+.glow-blue {
+  box-shadow: 0 0 25px -4px rgba(31, 107, 255, 0.45);
+}
+.glow-forest {
+  box-shadow: 0 0 25px -4px rgba(34, 197, 94, 0.45);
+}
+.glow-alert {
+  box-shadow: 0 0 25px -4px rgba(255, 45, 61, 0.45);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #060E20;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(31, 107, 255, 0.4);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #22D3EE;
+}
+/* New Layout Styles */
+.sidebar-transition {
+  transition: width 300ms cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+.sidebar-border-glow {
+  position: relative;
+}
+
+.sidebar-border-glow::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(180deg, rgba(34, 211, 238, 0.1) 0%, rgba(34, 211, 238, 0.05) 50%, rgba(34, 211, 238, 0) 100%);
+  pointer-events: none;
+  border-radius: inherit;
+  opacity: 0;
+  transition: opacity 200ms ease;
+}
+
+.sidebar-border-glow:hover::after {
+  opacity: 1;
+}
+
+/* KPI Card Animations */
+@keyframes countup {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.kpi-card {
+  animation: countup 0.6s ease-out;
+}
+
+.kpi-card:nth-child(2) { animation-delay: 0.1s; }
+.kpi-card:nth-child(3) { animation-delay: 0.2s; }
+.kpi-card:nth-child(4) { animation-delay: 0.3s; }
+
+.metric-card {
+  animation: countup 650ms cubic-bezier(.2,.75,.25,1) both;
+}
+
+@supports (animation-timeline: view()) {
+  .dashboard-page section,
+  .dashboard-page footer {
+    animation: scroll-reveal 1ms linear both;
+    animation-timeline: view();
+    animation-range: entry 0% entry 22%;
+  }
+}
+
+/* Enhanced Glass Effects */
+.glass-card-enhanced {
+  background: linear-gradient(135deg, rgba(12, 28, 44, 0.72) 0%, rgba(6, 18, 36, 0.8) 100%);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  position: relative;
+  overflow: hidden;
+}
+
+.glass-card-enhanced::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(34, 211, 238, 0.5), transparent);
+  opacity: 0;
+  transition: opacity 300ms ease;
+}
+
+.glass-card-enhanced:hover::before {
+  opacity: 1;
+}
+
+.glass-card-enhanced:hover {
+  border-color: rgba(34, 211, 238, 0.15);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 0 20px rgba(34, 211, 238, 0.1);
+}
+
+/* Sparkline Animation */
+@keyframes sparkline-draw {
+  from { width: 0; }
+  to { width: 100%; }
+}
+
+.sparkline-bar {
+  animation: sparkline-draw 1.5s ease-out;
+}
+
+/* Activity Feed Dots */
+.activity-dot {
+  position: relative;
+}
+
+.activity-dot::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  background: currentColor;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  opacity: 0.3;
+  animation: pulse 2s infinite;
+}
+
+/* Map Controls */
+.map-control {
+  backdrop-filter: blur(12px);
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 200ms ease;
+}
+
+.map-control:hover {
+  background: rgba(0, 0, 0, 0.5);
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: scale(1.05);
+}
+
+/* Globe Fallback Styles */
+.globe-fallback-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 1px solid rgba(34, 211, 238, 0.2);
+  animation: rotate 20s linear infinite;
+}
+
+@keyframes rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+  .sidebar-transition {
+    transform: translateX(-100%);
+  }
+  
+  .sidebar-transition.open {
+    transform: translateX(0);
+  }
+}
+
+/* Focus styles for accessibility */
+.focus-ring {
+  position: relative;
+}
+
+.focus-ring:focus {
+  outline: none;
+}
+
+.focus-ring:focus::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border: 2px solid rgba(34, 211, 238, 0.6);
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+/* Loading states */
+.loading-shimmer {
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
