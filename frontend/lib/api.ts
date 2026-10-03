@@ -37,6 +37,8 @@ export interface ScanItem {
   alignment_quality?: number;
   old_thumbnail?: string;
   new_thumbnail?: string;
+  old_image_path?: string;
+  new_image_path?: string;
   aligned_image_path?: string;
   diff_heatmap_path?: string;
   detection_overlay_path?: string;

@@ -162,7 +162,8 @@ export default function SatelliteMap({
   useEffect(() => {
     if (typeof window === "undefined" || mapObjRef.current) return;
 
-    import("leaflet").then((L) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (Function("return import('leaflet')")() as Promise<any>).then((L) => {
       leafletRef.current = L;
 
       // Fix default marker icon path issue in Next.js

@@ -75,50 +75,286 @@ interface PresetLocation {
 /* ------------------------------------------------------------------ */
 /* Data                                                                 */
 /* ------------------------------------------------------------------ */
+/* ------------------------------------------------------------------ */
+/* Real Geographic Data & Helper Polygon Generator                      */
+/* ------------------------------------------------------------------ */
+function generateAnomalyPolygon(
+  centerLon: number,
+  centerLat: number,
+  areaHa: number,
+  seed = 1
+): [number, number][] {
+  // 1 ha = 10,000 m2. Radius approx sqrt(area * 10000 / pi)
+  const radiusMeters = Math.max(140, Math.sqrt((areaHa * 10000) / Math.PI) * 1.15);
+  const numPoints = 10;
+  const coords: [number, number][] = [];
+  const latFactor = 1 / 111320;
+  const lonFactor = 1 / (111320 * Math.max(0.1, Math.cos((centerLat * Math.PI) / 180)));
+
+  for (let i = 0; i < numPoints; i++) {
+    const angle = (i / numPoints) * 2 * Math.PI;
+    const jitter = 0.82 + 0.36 * Math.sin(angle * 3 + seed * 1.7);
+    const r = radiusMeters * jitter;
+    const pLat = centerLat + r * Math.sin(angle) * latFactor;
+    const pLon = centerLon + r * Math.cos(angle) * lonFactor;
+    coords.push([pLon, pLat]);
+  }
+  coords.push(coords[0]);
+  return coords;
+}
+
 const PRESET_LOCATIONS: PresetLocation[] = [
   {
     id: "sundarbans",
     name: "Sundarbans Biosphere Reserve",
-    lat: 22.5721, lon: 88.3634,
-    latStr: "22.5721° N", lonStr: "88.3634° E",
+    lat: 22.0250, lon: 88.8500,
+    latStr: "22.0250° N", lonStr: "88.8500° E",
     beforeDate: "Jan 2023", afterDate: "Jul 2024",
-    totalAreaHa: 26.2, areaChangePct: 32, changeTypesCount: 3, avgConfidence: 92, suspiciousSitesCount: 5,
+    totalAreaHa: 26.2, areaChangePct: 32, changeTypesCount: 3, avgConfidence: 92, suspiciousSitesCount: 6,
     anomalies: [
-      { id: "s1", type: "Construction", title: "Illegal Construction", areaHa: 12.4, confidence: 94, lat: 22.5721, lon: 88.3634, latStr: "22.5721° N", lonStr: "88.3634° E", timeSpike: "Spike Jul 2024 (+12.4 ha)", description: "Unauthorized concrete foundation pads and perimeter grading detected with heavy machinery footprint." },
-      { id: "s2", type: "Deforestation", title: "Mangrove Clearance", areaHa: 8.7, confidence: 91, lat: 22.5684, lon: 88.3582, latStr: "22.5684° N", lonStr: "88.3582° E", timeSpike: "Gradual logging Jul 2023–Jun 2024", description: "Clear-cut mangrove and native canopy with exposed bare soil and burn scars along tidal creeks." },
-      { id: "s3", type: "Mining", title: "Extraction Activity", areaHa: 5.1, confidence: 88, lat: 22.5792, lon: 88.3698, latStr: "22.5792° N", lonStr: "88.3698° E", timeSpike: "Excavation cut Apr 2024", description: "Open excavation quarry pit cutting into the river loop with slurry ponds and extraction tiers." },
+      {
+        id: "s1",
+        type: "Construction",
+        title: "Illegal Aquaculture Embankment",
+        areaHa: 12.4,
+        confidence: 94,
+        lat: 22.0340,
+        lon: 88.8620,
+        latStr: "22.0340° N",
+        lonStr: "88.8620° E",
+        timeSpike: "Spike Jul 2024 (+12.4 ha)",
+        description: "Unauthorized commercial shrimp pond dykes and concrete sluice construction encroaching into protected coastal mangrove buffer."
+      },
+      {
+        id: "s2",
+        type: "Deforestation",
+        title: "Tidal Mangrove Clearance",
+        areaHa: 8.7,
+        confidence: 91,
+        lat: 22.0180,
+        lon: 88.8410,
+        latStr: "22.0180° N",
+        lonStr: "88.8410° E",
+        timeSpike: "Gradual logging Jun 2023–May 2024",
+        description: "Clear-cut tidal mangrove canopy and native saline vegetation with exposed mudflats along estuarine creeks."
+      },
+      {
+        id: "s3",
+        type: "Mining",
+        title: "Estuarine Sand Extraction Pit",
+        areaHa: 5.1,
+        confidence: 88,
+        lat: 22.0120,
+        lon: 88.8680,
+        latStr: "22.0120° N",
+        lonStr: "88.8680° E",
+        timeSpike: "Suction dredging Apr 2024",
+        description: "Unauthorized mechanical suction dredging and sand extraction gouging river channels and tidal sandbars."
+      },
     ],
-    distribution: [{ name: "Construction", value: 40, color: "#FF4D4D" }, { name: "Deforestation", value: 38, color: "#00C49F" }, { name: "Mining", value: 22, color: "#F79009" }],
-    timeline: [{ month: "Jan 23", area: 2.1 }, { month: "Apr 23", area: 4.8 }, { month: "Jul 23", area: 8.3 }, { month: "Oct 23", area: 12.6 }, { month: "Jan 24", area: 17.1 }, { month: "Apr 24", area: 20.4 }, { month: "Jul 24", area: 26.2, note: "Spike" }],
+    distribution: [
+      { name: "Construction", value: 47, color: "#FF4D4D" },
+      { name: "Deforestation", value: 33, color: "#00D284" },
+      { name: "Mining", value: 20, color: "#F79009" }
+    ],
+    timeline: [
+      { month: "Jan 23", area: 2.1 },
+      { month: "Apr 23", area: 4.8 },
+      { month: "Jul 23", area: 8.3 },
+      { month: "Oct 23", area: 12.6 },
+      { month: "Jan 24", area: 17.1 },
+      { month: "Apr 24", area: 20.4 },
+      { month: "Jul 24", area: 26.2, note: "Spike" }
+    ],
+  },
+  {
+    id: "raniganj",
+    name: "Raniganj Coal Basin",
+    lat: 23.6186, lon: 87.0544,
+    latStr: "23.6186° N", lonStr: "87.0544° E",
+    beforeDate: "Jan 2023", afterDate: "Aug 2024",
+    totalAreaHa: 48.9, areaChangePct: 42, changeTypesCount: 3, avgConfidence: 94, suspiciousSitesCount: 8,
+    anomalies: [
+      {
+        id: "r1",
+        type: "Mining",
+        title: "Open-Cast Coal Pit Expansion",
+        areaHa: 28.4,
+        confidence: 96,
+        lat: 23.6265,
+        lon: 87.0620,
+        latStr: "23.6265° N",
+        lonStr: "87.0620° E",
+        timeSpike: "Excavation cut Jun 2024 (+28.4 ha)",
+        description: "Massive open-cast dragline coal pit widening into unpermitted seam zones with terraced excavation benches and slurry lagoons."
+      },
+      {
+        id: "r2",
+        type: "Deforestation",
+        title: "Mine Perimeter Forest Stripping",
+        areaHa: 9.3,
+        confidence: 91,
+        lat: 23.6380,
+        lon: 87.0780,
+        latStr: "23.6380° N",
+        lonStr: "87.0780° E",
+        timeSpike: "Clearance wave May 2024",
+        description: "Strip clearance of indigenous sal canopy to prepare land for heavy overburden dumping and rock crushing zones."
+      },
+      {
+        id: "r3",
+        type: "Construction",
+        title: "Overburden Rail Siding & Pad",
+        areaHa: 11.2,
+        confidence: 93,
+        lat: 23.6090,
+        lon: 87.0430,
+        latStr: "23.6090° N",
+        lonStr: "87.0430° E",
+        timeSpike: "Poured concrete Mar 2024",
+        description: "Unauthorized reinforced concrete staging pad and rail transport spur constructed without environmental clearance."
+      },
+    ],
+    distribution: [
+      { name: "Mining", value: 58, color: "#F79009" },
+      { name: "Construction", value: 23, color: "#FF4D4D" },
+      { name: "Deforestation", value: 19, color: "#00D284" }
+    ],
+    timeline: [
+      { month: "Jan 23", area: 5.2 },
+      { month: "Apr 23", area: 11.4 },
+      { month: "Jul 23", area: 19.8 },
+      { month: "Oct 23", area: 28.2 },
+      { month: "Jan 24", area: 36.5 },
+      { month: "Apr 24", area: 41.8 },
+      { month: "Aug 24", area: 48.9, note: "Spike" }
+    ],
+  },
+  {
+    id: "amazon",
+    name: "Amazon Rainforest Frontier",
+    lat: -3.4653, lon: -62.2159,
+    latStr: "3.4653° S", lonStr: "62.2159° W",
+    beforeDate: "Feb 2023", afterDate: "Sep 2024",
+    totalAreaHa: 44.7, areaChangePct: 55, changeTypesCount: 3, avgConfidence: 94, suspiciousSitesCount: 9,
+    anomalies: [
+      {
+        id: "a1",
+        type: "Deforestation",
+        title: "Primary Rainforest Clear-Cut",
+        areaHa: 26.1,
+        confidence: 96,
+        lat: -3.4720,
+        lon: -62.2240,
+        latStr: "3.4720° S",
+        lonStr: "62.2240° W",
+        timeSpike: "Major logging Jul 2024",
+        description: "Fishbone-pattern primary rainforest removal and scorched canopy detected across indigenous reserve buffer."
+      },
+      {
+        id: "a2",
+        type: "Mining",
+        title: "Garimpo Alluvial Gold Dredge",
+        areaHa: 12.8,
+        confidence: 91,
+        lat: -3.4910,
+        lon: -62.1980,
+        latStr: "3.4910° S",
+        lonStr: "62.1980° W",
+        timeSpike: "Dredging expanded May 2024",
+        description: "Heavy hydraulic washing and alluvial mercury dredge pits gouging riparian riverbanks."
+      },
+      {
+        id: "a3",
+        type: "Construction",
+        title: "Wildcat Runway & Logistics Base",
+        areaHa: 5.8,
+        confidence: 89,
+        lat: -3.4540,
+        lon: -62.2410,
+        latStr: "3.4540° S",
+        lonStr: "62.2410° W",
+        timeSpike: "Airstrip cleared Mar 2024",
+        description: "Unauthorized gravel airstrip and logistical hangar construction supporting illegal wildcat supply lines."
+      },
+    ],
+    distribution: [
+      { name: "Deforestation", value: 58, color: "#00C49F" },
+      { name: "Mining", value: 29, color: "#F79009" },
+      { name: "Construction", value: 13, color: "#FF4D4D" }
+    ],
+    timeline: [
+      { month: "Feb 23", area: 1.5 },
+      { month: "May 23", area: 4.2 },
+      { month: "Aug 23", area: 9.1 },
+      { month: "Nov 23", area: 15.8 },
+      { month: "Feb 24", area: 22.3 },
+      { month: "May 24", area: 31.2 },
+      { month: "Sep 24", area: 44.7, note: "Spike" }
+    ],
   },
   {
     id: "kalimantan",
     name: "Kalimantan Rainforest",
-    lat: -1.28, lon: 116.83,
-    latStr: "1.2800° S", lonStr: "116.8300° E",
+    lat: -1.2650, lon: 116.8400,
+    latStr: "1.2650° S", lonStr: "116.8400° E",
     beforeDate: "Mar 2023", afterDate: "Aug 2024",
-    totalAreaHa: 38.4, areaChangePct: 48, changeTypesCount: 2, avgConfidence: 89, suspiciousSitesCount: 7,
+    totalAreaHa: 44.8, areaChangePct: 48, changeTypesCount: 3, avgConfidence: 91, suspiciousSitesCount: 7,
     anomalies: [
-      { id: "k1", type: "Deforestation", title: "Peat Forest Loss", areaHa: 22.6, confidence: 93, lat: -1.28, lon: 116.83, latStr: "1.2800° S", lonStr: "116.8300° E", timeSpike: "Rapid clearing Jun 2024 (+22.6 ha)", description: "Large-scale peat forest clearance consistent with palm oil plantation expansion." },
-      { id: "k2", type: "Mining", title: "Coal Mining Pit", areaHa: 15.8, confidence: 86, lat: -1.29, lon: 116.85, latStr: "1.2900° S", lonStr: "116.8500° E", timeSpike: "Excavation expanded Mar 2024", description: "Open-pit coal mining operation expanding into primary rainforest zone." },
+      {
+        id: "k1",
+        type: "Deforestation",
+        title: "Peat Forest Canopy Loss",
+        areaHa: 22.6,
+        confidence: 93,
+        lat: -1.2580,
+        lon: 116.8280,
+        latStr: "1.2580° S",
+        lonStr: "116.8280° E",
+        timeSpike: "Peatland cleared Jun 2024",
+        description: "Large-scale peat forest drainage and clearance consistent with unauthorized palm estate expansion."
+      },
+      {
+        id: "k2",
+        type: "Mining",
+        title: "Open-Cut Thermal Coal Pit",
+        areaHa: 15.8,
+        confidence: 86,
+        lat: -1.2820,
+        lon: 116.8550,
+        latStr: "1.2820° S",
+        lonStr: "116.8550° E",
+        timeSpike: "Pit gouged Mar 2024",
+        description: "Open-cut thermal coal excavation gouging primary watershed and creating unpermitted slurry ponds."
+      },
+      {
+        id: "k3",
+        type: "Construction",
+        title: "Barge Loading Terminal & Jetty",
+        areaHa: 6.4,
+        confidence: 92,
+        lat: -1.2710,
+        lon: 116.8450,
+        latStr: "1.2710° S",
+        lonStr: "116.8450° E",
+        timeSpike: "Jetty pilings Apr 2024",
+        description: "Industrial concrete wharf, conveyor gantry, and barge loading facility on riverfront buffer."
+      },
     ],
-    distribution: [{ name: "Deforestation", value: 59, color: "#00C49F" }, { name: "Mining", value: 41, color: "#F79009" }],
-    timeline: [{ month: "Mar 23", area: 3.2 }, { month: "Jun 23", area: 7.9 }, { month: "Sep 23", area: 13.4 }, { month: "Dec 23", area: 18.7 }, { month: "Mar 24", area: 25.1 }, { month: "Jun 24", area: 32.6 }, { month: "Aug 24", area: 38.4, note: "Spike" }],
-  },
-  {
-    id: "amazon",
-    name: "Amazon River Basin",
-    lat: -3.47, lon: -62.22,
-    latStr: "3.4700° S", lonStr: "62.2200° W",
-    beforeDate: "Feb 2023", afterDate: "Sep 2024",
-    totalAreaHa: 44.7, areaChangePct: 55, changeTypesCount: 3, avgConfidence: 94, suspiciousSitesCount: 9,
-    anomalies: [
-      { id: "a1", type: "Deforestation", title: "Primary Forest Loss", areaHa: 26.1, confidence: 96, lat: -3.47, lon: -62.22, latStr: "3.4700° S", lonStr: "62.2200° W", timeSpike: "Major wave Jul 2024", description: "Extensive primary forest removal with cattle ranch infrastructure visible." },
-      { id: "a2", type: "Mining", title: "Alluvial Gold Mining", areaHa: 12.8, confidence: 91, lat: -3.49, lon: -62.19, latStr: "3.4900° S", lonStr: "62.1900° W", timeSpike: "Dredging expanded May 2024", description: "Alluvial gold panning dredges and hydraulic washing pits gouging riparian riverbanks." },
-      { id: "a3", type: "Construction", title: "Illegal Settlement", areaHa: 5.8, confidence: 89, lat: -3.45, lon: -62.24, latStr: "3.4500° S", lonStr: "62.2400° W", timeSpike: "Settlement growth Mar 2024", description: "Unauthorized road network and settlement clearing in protected forest buffer zone." },
+    distribution: [
+      { name: "Deforestation", value: 50, color: "#00C49F" },
+      { name: "Mining", value: 35, color: "#F79009" },
+      { name: "Construction", value: 15, color: "#FF4D4D" }
     ],
-    distribution: [{ name: "Deforestation", value: 58, color: "#00C49F" }, { name: "Construction", value: 26, color: "#FF4D4D" }, { name: "Mining", value: 16, color: "#F79009" }],
-    timeline: [{ month: "Feb 23", area: 1.5 }, { month: "May 23", area: 4.2 }, { month: "Aug 23", area: 9.1 }, { month: "Nov 23", area: 15.8 }, { month: "Feb 24", area: 22.3 }, { month: "May 24", area: 31.2 }, { month: "Sep 24", area: 44.7, note: "Spike" }],
+    timeline: [
+      { month: "Mar 23", area: 3.2 },
+      { month: "Jun 23", area: 7.9 },
+      { month: "Sep 23", area: 13.4 },
+      { month: "Dec 23", area: 18.7 },
+      { month: "Mar 24", area: 25.1 },
+      { month: "Jun 24", area: 32.6 },
+      { month: "Aug 24", area: 44.8, note: "Spike" }
+    ],
   },
 ];
 
@@ -130,19 +366,21 @@ const ANOMALY_CFG = {
 };
 
 /* ------------------------------------------------------------------ */
-/* Mapbox Satellite Map                                                 */
+/* Mapbox Satellite Map with Real WebGL Heatmap + Vector Layers        */
 /* ------------------------------------------------------------------ */
 function SatelliteDetectionMap({
   location,
   anomalies,
-  showChangeMask,
+  showHeatmap,
+  layerVisibility,
   selectedAnomaly,
   onAnomalySelect,
   mapHeightPx,
 }: {
   location: PresetLocation;
   anomalies: DetectedAnomaly[];
-  showChangeMask: boolean;
+  showHeatmap: boolean;
+  layerVisibility: Record<string, boolean>;
   selectedAnomaly: DetectedAnomaly;
   onAnomalySelect: (a: DetectedAnomaly) => void;
   mapHeightPx: number;
@@ -169,6 +407,141 @@ function SatelliteDetectionMap({
     markersRef.current = [];
   }, []);
 
+  // Synchronize Mapbox GL WebGL Heatmap and Vector Layers
+  const updateMapLayers = useCallback(() => {
+    const map = mapRef.current;
+    if (!map || !map.isStyleLoaded()) return;
+
+    // 1. Heatmap layer (WebGL)
+    const heatmapPoints = anomalies.map((a) => ({
+      type: "Feature" as const,
+      properties: { weight: a.areaHa, confidence: a.confidence },
+      geometry: { type: "Point" as const, coordinates: [a.lon, a.lat] },
+    }));
+
+    const heatmapGeoJSON = {
+      type: "FeatureCollection" as const,
+      features: heatmapPoints,
+    };
+
+    if (map.getSource("tt-heatmap-src")) {
+      map.getSource("tt-heatmap-src").setData(heatmapGeoJSON);
+    } else {
+      map.addSource("tt-heatmap-src", {
+        type: "geojson",
+        data: heatmapGeoJSON,
+      });
+
+      map.addLayer({
+        id: "tt-heatmap-layer",
+        type: "heatmap",
+        source: "tt-heatmap-src",
+        maxzoom: 17,
+        paint: {
+          "heatmap-weight": ["interpolate", ["linear"], ["get", "weight"], 0, 0, 30, 1],
+          "heatmap-intensity": ["interpolate", ["linear"], ["zoom"], 0, 1, 14, 3],
+          "heatmap-color": [
+            "interpolate",
+            ["linear"],
+            ["heatmap-density"],
+            0, "rgba(0, 210, 132, 0)",
+            0.2, "rgba(0, 180, 216, 0.45)",
+            0.4, "rgba(0, 210, 132, 0.75)",
+            0.7, "rgba(247, 144, 9, 0.85)",
+            1, "rgba(255, 77, 77, 0.95)",
+          ],
+          "heatmap-radius": ["interpolate", ["linear"], ["zoom"], 0, 10, 14, 45],
+          "heatmap-opacity": 0.85,
+        },
+      });
+    }
+
+    if (map.getLayer("tt-heatmap-layer")) {
+      map.setLayoutProperty("tt-heatmap-layer", "visibility", showHeatmap ? "visible" : "none");
+    }
+
+    // 2. Vector Polygon Layers for Construction, Deforestation, Mining
+    const categoryTypes = ["Construction", "Deforestation", "Mining"] as const;
+    categoryTypes.forEach((type, tIdx) => {
+      const srcId = `tt-${type.toLowerCase()}-src`;
+      const fillId = `tt-${type.toLowerCase()}-fill`;
+      const lineId = `tt-${type.toLowerCase()}-line`;
+      const cfg = ANOMALY_CFG[type];
+
+      const typeAnomalies = anomalies.filter((a) => a.type === type);
+      const features = typeAnomalies.map((a, i) => ({
+        type: "Feature" as const,
+        properties: {
+          id: a.id,
+          title: a.title,
+          type: a.type,
+          areaHa: a.areaHa,
+          confidence: a.confidence,
+          timeSpike: a.timeSpike,
+        },
+        geometry: {
+          type: "Polygon" as const,
+          coordinates: [generateAnomalyPolygon(a.lon, a.lat, a.areaHa, tIdx * 10 + i + 1)],
+        },
+      }));
+
+      const geoData = {
+        type: "FeatureCollection" as const,
+        features,
+      };
+
+      if (map.getSource(srcId)) {
+        map.getSource(srcId).setData(geoData);
+      } else {
+        map.addSource(srcId, { type: "geojson", data: geoData });
+
+        map.addLayer({
+          id: fillId,
+          type: "fill",
+          source: srcId,
+          paint: {
+            "fill-color": cfg.color,
+            "fill-opacity": 0.32,
+          },
+        });
+
+        map.addLayer({
+          id: lineId,
+          type: "line",
+          source: srcId,
+          paint: {
+            "line-color": cfg.color,
+            "line-width": 2.2,
+            "line-dasharray": type === "Construction" ? [2, 2] : [1],
+          },
+        });
+
+        // Click to inspect
+        map.on("click", fillId, (e: any) => {
+          if (e.features && e.features[0]) {
+            const featId = e.features[0].properties?.id;
+            const target = anomalies.find((a) => a.id === featId);
+            if (target) onAnomalySelect(target);
+          }
+        });
+        map.on("mouseenter", fillId, () => {
+          map.getCanvas().style.cursor = "pointer";
+        });
+        map.on("mouseleave", fillId, () => {
+          map.getCanvas().style.cursor = "";
+        });
+      }
+
+      const isVisible = layerVisibility[type] !== false;
+      if (map.getLayer(fillId)) {
+        map.setLayoutProperty(fillId, "visibility", isVisible ? "visible" : "none");
+      }
+      if (map.getLayer(lineId)) {
+        map.setLayoutProperty(lineId, "visibility", isVisible ? "visible" : "none");
+      }
+    });
+  }, [anomalies, showHeatmap, layerVisibility, onAnomalySelect]);
+
   // Init map
   useEffect(() => {
     if (!token) {
@@ -188,7 +561,7 @@ function SatelliteDetectionMap({
         container: containerRef.current,
         style: STYLES.satellite,
         center: [location.lon, location.lat],
-        zoom: 12,
+        zoom: 12.5,
         attributionControl: false,
         preserveDrawingBuffer: true,
       });
@@ -197,7 +570,14 @@ function SatelliteDetectionMap({
       map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), "bottom-right");
 
       map.on("load", () => {
-        if (!cancelled) setMapReady(true);
+        if (!cancelled) {
+          setMapReady(true);
+        }
+      });
+
+      map.on("style.load", () => {
+        // Re-inject sources & layers when user switches base style
+        setTimeout(() => updateMapLayers(), 100);
       });
 
       mapRef.current = map;
@@ -218,6 +598,13 @@ function SatelliteDetectionMap({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
+  // Update layers whenever data/toggles change
+  useEffect(() => {
+    if (mapRef.current && mapReady) {
+      updateMapLayers();
+    }
+  }, [mapReady, updateMapLayers]);
+
   // Resize map when mapHeightPx changes
   useEffect(() => {
     if (mapRef.current && mapReady) {
@@ -228,68 +615,70 @@ function SatelliteDetectionMap({
   // Fly to location
   useEffect(() => {
     if (!mapRef.current || !mapReady) return;
-    mapRef.current.flyTo({ center: [location.lon, location.lat], zoom: 12, duration: 1000, essential: true });
+    mapRef.current.flyTo({ center: [location.lon, location.lat], zoom: 12.5, duration: 1100, essential: true });
   }, [location.id, mapReady]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Fly to selected anomaly
   useEffect(() => {
     if (!mapRef.current || !mapReady) return;
-    mapRef.current.flyTo({ center: [selectedAnomaly.lon, selectedAnomaly.lat], zoom: 14, duration: 800, essential: true });
+    mapRef.current.flyTo({ center: [selectedAnomaly.lon, selectedAnomaly.lat], zoom: 14.5, duration: 800, essential: true });
   }, [selectedAnomaly.id, mapReady]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Place markers
+  // Place interactive markers
   useEffect(() => {
     if (!mapRef.current || !mapReady) return;
     import("mapbox-gl").then(({ default: mapboxgl }) => {
       clearMarkers();
-      anomalies.forEach((anomaly) => {
-        const isSelected = anomaly.id === selectedAnomaly.id;
-        const cfg = ANOMALY_CFG[anomaly.type] ?? ANOMALY_CFG.Others;
-        const color = cfg.color;
-        const size = isSelected ? 44 : 34;
+      anomalies
+        .filter((anomaly) => layerVisibility[anomaly.type] !== false)
+        .forEach((anomaly) => {
+          const isSelected = anomaly.id === selectedAnomaly.id;
+          const cfg = ANOMALY_CFG[anomaly.type] ?? ANOMALY_CFG.Others;
+          const color = cfg.color;
+          const size = isSelected ? 44 : 34;
 
-        const el = document.createElement("div");
-        el.style.cssText = `
-          width:${size}px; height:${size}px; border-radius:50%;
-          background:${color}20; border:2.5px solid ${color};
-          display:flex; align-items:center; justify-content:center;
-          cursor:pointer; position:relative;
-          box-shadow:0 0 ${isSelected ? 18 : 8}px ${color}99;
-          transition:all .2s;
-        `;
-        el.innerHTML = `<div style="width:10px;height:10px;border-radius:50%;background:${color};box-shadow:0 0 6px ${color}"></div>`;
-        if (isSelected) {
-          const ring = document.createElement("div");
-          ring.style.cssText = `position:absolute;inset:-8px;border-radius:50%;border:2px solid ${color}55;animation:ttping 1.4s ease-out infinite`;
-          el.appendChild(ring);
-        }
+          const el = document.createElement("div");
+          el.style.cssText = `
+            width:${size}px; height:${size}px; border-radius:50%;
+            background:${color}20; border:2.5px solid ${color};
+            display:flex; align-items:center; justify-content:center;
+            cursor:pointer; position:relative;
+            box-shadow:0 0 ${isSelected ? 18 : 8}px ${color}99;
+            transition:all .2s;
+          `;
+          el.innerHTML = `<div style="width:10px;height:10px;border-radius:50%;background:${color};box-shadow:0 0 6px ${color}"></div>`;
+          if (isSelected) {
+            const ring = document.createElement("div");
+            ring.style.cssText = `position:absolute;inset:-8px;border-radius:50%;border:2px solid ${color}55;animation:ttping 1.4s ease-out infinite`;
+            el.appendChild(ring);
+          }
 
-        const popup = new mapboxgl.Popup({ offset: 24, closeButton: false, closeOnClick: true, className: "tt-popup" })
-          .setHTML(`
-            <div style="background:#0b1827;border:1px solid ${color}55;border-radius:10px;padding:10px 14px;min-width:190px;font-family:ui-monospace,monospace">
-              <div style="color:${color};font-size:10px;font-weight:700;letter-spacing:.1em;margin-bottom:3px">${anomaly.type.toUpperCase()}</div>
-              <div style="color:#fff;font-size:13px;font-weight:700;margin-bottom:6px">${anomaly.title}</div>
-              <div style="display:flex;gap:10px;margin-bottom:4px">
-                <span style="color:#94a3b8;font-size:11px">Area: <strong style="color:#fff">${anomaly.areaHa} ha</strong></span>
-                <span style="color:#94a3b8;font-size:11px">Conf: <strong style="color:#00D284">${anomaly.confidence}%</strong></span>
+          const popup = new mapboxgl.Popup({ offset: 24, closeButton: false, closeOnClick: true, className: "tt-popup" })
+            .setHTML(`
+              <div style="background:#0b1827;border:1px solid ${color}55;border-radius:10px;padding:10px 14px;min-width:190px;font-family:ui-monospace,monospace">
+                <div style="color:${color};font-size:10px;font-weight:700;letter-spacing:.1em;margin-bottom:3px">${anomaly.type.toUpperCase()}</div>
+                <div style="color:#fff;font-size:13px;font-weight:700;margin-bottom:6px">${anomaly.title}</div>
+                <div style="display:flex;gap:10px;margin-bottom:4px">
+                  <span style="color:#94a3b8;font-size:11px">Area: <strong style="color:#fff">${anomaly.areaHa} ha</strong></span>
+                  <span style="color:#94a3b8;font-size:11px">Conf: <strong style="color:#00D284">${anomaly.confidence}%</strong></span>
+                </div>
+                <div style="color:#475569;font-size:10px">${anomaly.latStr} · ${anomaly.lonStr}</div>
               </div>
-              <div style="color:#475569;font-size:10px">${anomaly.latStr} · ${anomaly.lonStr}</div>
-            </div>
-          `);
+            `);
 
-        el.addEventListener("click", () => {
-          onAnomalySelect(anomaly);
-          if (mapRef.current) popup.addTo(mapRef.current);
+          el.addEventListener("click", () => {
+            onAnomalySelect(anomaly);
+            if (mapRef.current) popup.addTo(mapRef.current);
+          });
+
+          const marker = new mapboxgl.Marker({ element: el, anchor: "center" })
+            .setLngLat([anomaly.lon, anomaly.lat])
+            .addTo(mapRef.current!);
+
+          markersRef.current.push(marker);
         });
-
-        const marker = new mapboxgl.Marker({ element: el, anchor: "center" })
-          .setLngLat([anomaly.lon, anomaly.lat])
-          .addTo(mapRef.current!);
-
-        markersRef.current.push(marker);
-      });
     });
-  }, [anomalies, mapReady, selectedAnomaly.id, clearMarkers, onAnomalySelect]);
+  }, [anomalies, mapReady, selectedAnomaly.id, layerVisibility, clearMarkers, onAnomalySelect]);
 
   // Switch style
   useEffect(() => {
@@ -310,7 +699,7 @@ function SatelliteDetectionMap({
 
   return (
     <>
-      {/* --- Mapbox canvas target — must have a concrete pixel height --- */}
+      {/* --- Mapbox canvas target --- */}
       <div
         ref={containerRef}
         style={{ width: "100%", height: `${mapHeightPx}px` }}
@@ -324,20 +713,6 @@ function SatelliteDetectionMap({
             <span className="text-xs font-mono text-slate-400">Loading Satellite Imagery…</span>
           </div>
         </div>
-      )}
-
-      {/* Change-mask heatmap overlay */}
-      {showChangeMask && mapReady && (
-        <div
-          className="absolute inset-0 pointer-events-none z-[4]"
-          style={{
-            background: `
-              radial-gradient(ellipse at 60% 78%, rgba(255,77,77,0.16) 0%, transparent 28%),
-              radial-gradient(ellipse at 35% 68%, rgba(0,210,132,0.14) 0%, transparent 26%),
-              radial-gradient(ellipse at 58% 40%, rgba(247,144,9,0.13) 0%, transparent 24%)
-            `,
-          }}
-        />
       )}
 
       {/* Layer switcher - top-left */}
@@ -356,7 +731,7 @@ function SatelliteDetectionMap({
         ))}
       </div>
 
-      {/* Coordinates - top-right */}
+      {/* Real Coordinates telemetry - top-right */}
       <div className="absolute top-3 right-3 z-20 flex items-center gap-2 rounded-md border border-white/10 bg-[#07111D]/85 px-2.5 py-1 backdrop-blur-md">
         <span className="h-1.5 w-1.5 rounded-full bg-[#00D284] animate-pulse shadow-[0_0_5px_#00D284]" />
         <span className="text-[10px] font-mono text-slate-200">{location.latStr} · {location.lonStr}</span>
@@ -401,8 +776,12 @@ function DashboardContent() {
 
   const [loc, setLoc] = useState<PresetLocation>(PRESET_LOCATIONS[0]);
   const [selAnomaly, setSelAnomaly] = useState<DetectedAnomaly>(PRESET_LOCATIONS[0].anomalies[0]);
-  const [activeFilter, setActiveFilter] = useState("all");
-  const [showMask, setShowMask] = useState(true);
+  const [showHeatmap, setShowHeatmap] = useState(true);
+  const [layerVisibility, setLayerVisibility] = useState<Record<string, boolean>>({
+    Construction: true,
+    Deforestation: true,
+    Mining: true,
+  });
   const [fullscreen, setFullscreen] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
 
@@ -437,9 +816,29 @@ function DashboardContent() {
     return () => { active = false; clearInterval(t); };
   }, []);
 
-  const handleSelectLoc = (l: PresetLocation) => { setLoc(l); setSelAnomaly(l.anomalies[0]); setActiveFilter("all"); };
+  const handleSelectLoc = (l: PresetLocation) => {
+    setLoc(l);
+    setSelAnomaly(l.anomalies[0]);
+  };
 
-  const visibleAnomalies = loc.anomalies.filter((a) => activeFilter === "all" || a.type === activeFilter);
+  const toggleLayer = (type: string) => {
+    setLayerVisibility((prev) => ({
+      ...prev,
+      [type]: !prev[type],
+    }));
+  };
+
+  const toggleAllLayers = () => {
+    const allOn = Object.values(layerVisibility).every(Boolean) && showHeatmap;
+    setShowHeatmap(!allOn);
+    setLayerVisibility({
+      Construction: !allOn,
+      Deforestation: !allOn,
+      Mining: !allOn,
+    });
+  };
+
+  const visibleAnomalies = loc.anomalies.filter((a) => layerVisibility[a.type] !== false);
 
   const totalArea = backendStats?.total_changed_area_ha ?? loc.totalAreaHa;
   const totalScans = backendStats?.total_scans ?? 127;
@@ -538,11 +937,12 @@ function DashboardContent() {
               >
                 <SatelliteDetectionMap
                   location={loc}
-                  anomalies={visibleAnomalies}
-                  showChangeMask={showMask}
+                  anomalies={loc.anomalies}
+                  showHeatmap={showHeatmap}
+                  layerVisibility={layerVisibility}
                   selectedAnomaly={selAnomaly}
                   onAnomalySelect={setSelAnomaly}
-                  mapHeightPx={fullscreen ? window?.innerHeight - 120 ?? 600 : MAP_HEIGHT}
+                  mapHeightPx={fullscreen ? (typeof window !== "undefined" ? window.innerHeight - 120 : 600) : MAP_HEIGHT}
                 />
               </div>
 
@@ -559,30 +959,54 @@ function DashboardContent() {
               {/* Filter strip — bottom 48px of the card */}
               <div className="absolute bottom-0 left-0 right-0 h-12 flex items-center justify-between gap-2 border-t border-white/[.06] bg-[#0A1625]/98 backdrop-blur-md px-4 rounded-b-2xl">
                 <div className="flex flex-wrap items-center gap-1.5">
-                  {/* Change mask toggle */}
-                  <button type="button" onClick={() => setShowMask((m) => !m)}
-                    className={`flex items-center gap-1 rounded-md px-2 py-1 text-[10px] font-mono font-semibold transition-all ${
-                      showMask ? "border border-cyan-400/50 bg-cyan-500/20 text-cyan-300" : "border border-white/10 bg-white/5 text-slate-400 hover:text-white"
-                    }`}>
-                    <span className="h-1.5 w-1.5 rounded-full bg-cyan-400" /> Heatmap
+                  {/* Real WebGL Heatmap Toggle */}
+                  <button
+                    type="button"
+                    onClick={() => setShowHeatmap((h) => !h)}
+                    className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[10px] font-mono font-semibold transition-all ${
+                      showHeatmap
+                        ? "border border-cyan-400/60 bg-cyan-500/20 text-cyan-200 shadow-[0_0_10px_rgba(0,180,216,0.3)]"
+                        : "border border-white/10 bg-white/5 text-slate-500 hover:text-slate-300"
+                    }`}
+                  >
+                    <span className={`h-1.5 w-1.5 rounded-full ${showHeatmap ? "bg-cyan-400 shadow-[0_0_6px_#00B4D8]" : "bg-slate-600"}`} />
+                    Heatmap
                   </button>
-                  {(["Construction", "Deforestation", "Mining", "Others"] as const).map((type) => {
+
+                  {/* Individual Layers: Construction, Deforestation, Mining */}
+                  {(["Construction", "Deforestation", "Mining"] as const).map((type) => {
                     const c = ANOMALY_CFG[type];
                     const IcoComp = c.icon;
-                    const active = activeFilter === type || activeFilter === "all";
+                    const active = layerVisibility[type] !== false;
                     return (
-                      <button key={type} type="button"
-                        onClick={() => setActiveFilter((f) => f === type ? "all" : type)}
-                        className={`flex items-center gap-1 rounded-md px-2 py-1 text-[10px] font-mono font-semibold transition-all border ${
-                          active ? `${c.pillBorder} ${c.pillBg} ${c.pillText}` : "border-white/10 bg-white/5 text-slate-500"
-                        }`}>
-                        <IcoComp className="h-2.5 w-2.5" style={{ color: c.color }} />{type}
+                      <button
+                        key={type}
+                        type="button"
+                        onClick={() => toggleLayer(type)}
+                        className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[10px] font-mono font-semibold transition-all border ${
+                          active
+                            ? `${c.pillBorder} ${c.pillBg} ${c.pillText} shadow-[0_0_10px_${c.color}25]`
+                            : "border-white/10 bg-white/5 text-slate-500 hover:text-slate-300"
+                        }`}
+                      >
+                        <IcoComp className="h-2.5 w-2.5" style={{ color: active ? c.color : "#64748b" }} />
+                        {type}
                       </button>
                     );
                   })}
+
+                  {/* Toggle All Layers */}
+                  <button
+                    type="button"
+                    onClick={toggleAllLayers}
+                    className="flex items-center gap-1 rounded-md border border-white/10 bg-white/5 px-2 py-1 text-[10px] font-mono text-slate-400 hover:border-white/20 hover:text-white transition-all ml-1"
+                  >
+                    All Layers
+                  </button>
                 </div>
                 <div className="hidden sm:flex items-center gap-1.5 text-[10px] font-mono text-slate-500 shrink-0">
-                  <Crosshair className="h-3 w-3" />{loc.latStr} · {loc.lonStr}
+                  <Crosshair className="h-3 w-3 text-cyan-400" />
+                  <span>{loc.latStr} · {loc.lonStr}</span>
                 </div>
               </div>
             </div>
@@ -598,13 +1022,13 @@ function DashboardContent() {
                   <h3 className="text-sm font-bold text-white">Detected Changes</h3>
                 </div>
                 <span className="flex items-center gap-1 rounded-full border border-[#FF4D4D]/40 bg-[#FF4D4D]/15 px-2.5 py-0.5 text-[10px] font-mono font-bold text-[#FF8585]">
-                  {loc.anomalies.length} High Priority
+                  {visibleAnomalies.length} High Priority
                 </span>
               </div>
 
               {/* List */}
               <div className="space-y-2.5 flex-1 overflow-y-auto pr-1">
-                {loc.anomalies.map((anomaly) => {
+                {visibleAnomalies.map((anomaly) => {
                   const isSelected = selAnomaly.id === anomaly.id;
                   const c = ANOMALY_CFG[anomaly.type] ?? ANOMALY_CFG.Others;
                   const IcoComp = c.icon;
