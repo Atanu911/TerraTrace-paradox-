@@ -91,7 +91,26 @@ async def run_analysis_pipeline(
         })
 
     try:
-        # Load images
+        # Robust path resolution with fallback to UPLOAD_DIR
+        def resolve_img_path(p: str) -> str:
+            if not p:
+                return ""
+            if os.path.exists(p):
+                return p
+            # Check relative to UPLOAD_DIR
+            basename = os.path.basename(p)
+            fallback = os.path.join(settings.UPLOAD_DIR, basename)
+            if os.path.exists(fallback):
+                return fallback
+            clean_rel = p.replace("\\", "/").split("uploads/")[-1]
+            fallback2 = os.path.join(settings.UPLOAD_DIR, clean_rel)
+            if os.path.exists(fallback2):
+                return fallback2
+            return p
+
+        old_path = resolve_img_path(old_path)
+        new_path = resolve_img_path(new_path)
+
         if not os.path.exists(old_path) or not os.path.exists(new_path):
             raise FileNotFoundError(f"Input images not found: {old_path} or {new_path}")
 
@@ -99,7 +118,7 @@ async def run_analysis_pipeline(
         new_img = safe_imread(new_path)
         
         if old_img is None or new_img is None:
-            raise ValueError("Failed to decode input images")
+            raise ValueError(f"Failed to decode input images: old={old_path}, new={new_path}")
 
         out_prefix = f"scan_{scan_id}"
         out_dir = settings.OUTPUT_DIR

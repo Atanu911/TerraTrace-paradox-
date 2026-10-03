@@ -225,6 +225,8 @@ export interface HotspotItem {
   type_counts: Record<string, number>;
   scan_id: number | null;
   report_pdf_path: string | null;
+  old_thumbnail?: string | null;
+  new_thumbnail?: string | null;
   detections: HotspotDetection[];
 }
 
@@ -481,7 +483,17 @@ export const api = {
 
   getAssetUrl(relativePath?: string | null): string {
     if (!relativePath) return "";
-    if (relativePath.startsWith("http")) return relativePath;
-    return `${API_BASE_URL}${relativePath.startsWith("/") ? "" : "/"}${relativePath}`;
+    if (relativePath.startsWith("http://") || relativePath.startsWith("https://")) return relativePath;
+    let clean = relativePath.replace(/\\/g, "/");
+    const outputsIdx = clean.toLowerCase().indexOf("outputs/");
+    if (outputsIdx !== -1) {
+      return `${API_BASE_URL}/${clean.substring(outputsIdx)}`;
+    }
+    const uploadsIdx = clean.toLowerCase().indexOf("uploads/");
+    if (uploadsIdx !== -1) {
+      return `${API_BASE_URL}/${clean.substring(uploadsIdx)}`;
+    }
+    const normalized = clean.startsWith("/") ? clean : `/${clean}`;
+    return `${API_BASE_URL}${normalized}`;
   }
 };

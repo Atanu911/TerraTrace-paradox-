@@ -255,11 +255,28 @@ async def seed():
             )
             session.add(scan2)
 
+        scan3 = session.exec(select(Scan).where(Scan.location_id == loc3.id)).first()
+        if not scan3:
+            scan3 = Scan(
+                location_id=loc3.id,
+                old_image_path=amaz_old,
+                new_image_path=amaz_new,
+                old_thumbnail=f"/uploads/{os.path.basename(amaz_old)}",
+                new_thumbnail=f"/uploads/{os.path.basename(amaz_new)}",
+                gsd_meters=0.5,
+                status="uploaded",
+                scan_date_old=datetime.now(timezone.utc) - timedelta(days=120),
+                scan_date_new=datetime.now(timezone.utc)
+            )
+            session.add(scan3)
+
         session.commit()
         if scan1:
             session.refresh(scan1)
         if scan2:
             session.refresh(scan2)
+        if scan3:
+            session.refresh(scan3)
 
     print("[PIPELINE] Running live analysis pipeline on Scan 1 (Sundarbans)...")
     if scan1:
@@ -268,6 +285,10 @@ async def seed():
     print("[PIPELINE] Running live analysis pipeline on Scan 2 (Raniganj)...")
     if scan2:
         await run_analysis_pipeline(scan2.id, change_threshold=0.25, min_region_area_px=60)
+
+    print("[PIPELINE] Running live analysis pipeline on Scan 3 (Amazon)...")
+    if scan3:
+        await run_analysis_pipeline(scan3.id, change_threshold=0.25, min_region_area_px=60)
 
     print("[DONE] Demo seeding complete! Database populated with realistic scans and forensic outputs.")
 

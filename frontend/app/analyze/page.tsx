@@ -84,9 +84,11 @@ function AnalyzeContent() {
   const [threshold, setThreshold] = useState(0.25);
   const [minArea, setMinArea] = useState(50);
   const pollingTimer = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [loadingScanResults, setLoadingScanResults] = useState(false);
 
   const loadResults = useCallback(async (id: number) => {
     try {
+      setLoadingScanResults(true);
       const [res, scans] = await Promise.all([api.getAnalysisResults(id), api.getScans()]);
       setResults(res);
       setCurrentScanId(id);
@@ -99,6 +101,8 @@ function AnalyzeContent() {
       setStatusError(true);
       setStatusMessage(error instanceof Error ? error.message : "Failed to load scan results.");
       return null;
+    } finally {
+      setLoadingScanResults(false);
     }
   }, []);
 
@@ -109,10 +113,24 @@ function AnalyzeContent() {
     api.getHotspots().then((data) => {
       if (!active) return;
       setHotspots(data);
-      // Auto-select if location_id param provided
+      // Auto-select initial location if provided, else auto-select first region with a completed scan
+      let target: HotspotItem | undefined;
       if (initialLocationId) {
-        const h = data.find((x) => x.id === parseInt(initialLocationId));
-        if (h) setSelectedHotspot(h);
+        target = data.find((x) => x.id === parseInt(initialLocationId));
+      }
+      if (!target && data.length > 0) {
+        target = data.find((x) => x.scan_id) || data[0];
+      }
+      if (target) {
+        setSelectedHotspot(target);
+        if (target.scan_id) {
+          setCurrentScanId(target.scan_id);
+          void loadResults(target.scan_id);
+        }
+        setSelectedLocation(target.id);
+        if (target.report_pdf_path) {
+          setPdfUrl(api.getAssetUrl(target.report_pdf_path));
+        }
       }
     }).catch(console.error);
 
@@ -227,7 +245,9 @@ function AnalyzeContent() {
       });
       setAiReport(report);
       // Also set PDF url for this location
-      if (selectedHotspot.scan_id) {
+      if (selectedHotspot.report_pdf_path) {
+        setPdfUrl(api.getAssetUrl(selectedHotspot.report_pdf_path));
+      } else if (selectedHotspot.scan_id) {
         setPdfUrl(`${API_BASE}/api/reports/location/${selectedHotspot.id}/download`);
       }
     } catch (error) {
@@ -327,7 +347,18 @@ function AnalyzeContent() {
                   {filteredHotspots.map((h) => (
                     <button
                       key={h.id}
-                      onClick={() => { setSelectedHotspot(h); setShowRegionDropdown(false); setRegionSearch(""); setAiReport(null); setPdfUrl(null); }}
+                      onClick={() => {
+                        setSelectedHotspot(h);
+                        setShowRegionDropdown(false);
+                        setRegionSearch("");
+                        setAiReport(null);
+                        if (h.scan_id) {
+                          setCurrentScanId(h.scan_id);
+                          void loadResults(h.scan_id);
+                        }
+                        setSelectedLocation(h.id);
+                        setPdfUrl(h.report_pdf_path ? api.getAssetUrl(h.report_pdf_path) : `${API_BASE}/api/reports/location/${h.id}/download`);
+                      }}
                       className={`w-full flex items-start gap-3 px-4 py-3 text-left hover:bg-white/[.04] transition border-b border-white/[.04] last:border-0 ${selectedHotspot?.id === h.id ? "bg-cyan-500/10" : ""}`}
                     >
                       <MapPin className="h-3.5 w-3.5 text-cyan-400 mt-0.5 shrink-0" />
@@ -440,57 +471,63 @@ function AnalyzeContent() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            {/* Before */}
-            <div className="rounded-xl overflow-hidden border border-white/[.07]">
-              <div className="bg-white/5 px-3 py-2 flex items-center justify-between">
-                <span className="text-xs font-mono text-slate-400">BEFORE — {beforeYear}</span>
-                <span className="text-[10px] text-slate-500">Satellite imagery</span>
-              </div>
-              <div className="relative aspect-video bg-[#07172a] flex items-center justify-center">
-                {hotspotScan?.old_thumbnail ? (
-                  <img
-                    src={`${API_BASE}${hotspotScan.old_thumbnail}`}
-                    alt={`Before ${beforeYear}`}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="text-center p-6">
-                    <div className="w-16 h-16 rounded-full bg-emerald-500/10 flex items-center justify-center mx-auto mb-3">
-                      <TreePine className="h-8 w-8 text-emerald-500/40" />
-                    </div>
-                    <p className="text-xs text-slate-500">Before imagery</p>
-                    <p className="text-[10px] text-slate-600 mt-1">{beforeYear}</p>
+          {(() => {
+            const beforeThumb = hotspotScan?.old_thumbnail || selectedHotspot?.old_thumbnail;
+            const afterThumb = hotspotScan?.new_thumbnail || selectedHotspot?.new_thumbnail;
+            return (
+              <div className="grid grid-cols-2 gap-4">
+                {/* Before */}
+                <div className="rounded-xl overflow-hidden border border-white/[.07]">
+                  <div className="bg-white/5 px-3 py-2 flex items-center justify-between">
+                    <span className="text-xs font-mono text-slate-400">BEFORE — {beforeYear}</span>
+                    <span className="text-[10px] text-slate-500">Satellite imagery</span>
                   </div>
-                )}
-              </div>
-            </div>
+                  <div className="relative aspect-video bg-[#07172a] flex items-center justify-center">
+                    {beforeThumb ? (
+                      <img
+                        src={api.getAssetUrl(beforeThumb)}
+                        alt={`Before ${beforeYear}`}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="text-center p-6">
+                        <div className="w-16 h-16 rounded-full bg-emerald-500/10 flex items-center justify-center mx-auto mb-3">
+                          <TreePine className="h-8 w-8 text-emerald-500/40" />
+                        </div>
+                        <p className="text-xs text-slate-500">Before imagery</p>
+                        <p className="text-[10px] text-slate-600 mt-1">{beforeYear}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
 
-            {/* After */}
-            <div className="rounded-xl overflow-hidden border border-white/[.07]">
-              <div className="bg-white/5 px-3 py-2 flex items-center justify-between">
-                <span className="text-xs font-mono text-slate-400">AFTER — {afterYear}</span>
-                <span className="text-[10px] text-slate-500">Change detected</span>
-              </div>
-              <div className="relative aspect-video bg-[#07172a] flex items-center justify-center">
-                {hotspotScan?.new_thumbnail ? (
-                  <img
-                    src={`${API_BASE}${hotspotScan.new_thumbnail}`}
-                    alt={`After ${afterYear}`}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="text-center p-6">
-                    <div className="w-16 h-16 rounded-full bg-rose-500/10 flex items-center justify-center mx-auto mb-3">
-                      <AlertTriangle className="h-8 w-8 text-rose-500/40" />
-                    </div>
-                    <p className="text-xs text-slate-500">After imagery</p>
-                    <p className="text-[10px] text-slate-600 mt-1">{afterYear}</p>
+                {/* After */}
+                <div className="rounded-xl overflow-hidden border border-white/[.07]">
+                  <div className="bg-white/5 px-3 py-2 flex items-center justify-between">
+                    <span className="text-xs font-mono text-slate-400">AFTER — {afterYear}</span>
+                    <span className="text-[10px] text-slate-500">Change detected</span>
                   </div>
-                )}
+                  <div className="relative aspect-video bg-[#07172a] flex items-center justify-center">
+                    {afterThumb ? (
+                      <img
+                        src={api.getAssetUrl(afterThumb)}
+                        alt={`After ${afterYear}`}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="text-center p-6">
+                        <div className="w-16 h-16 rounded-full bg-rose-500/10 flex items-center justify-center mx-auto mb-3">
+                          <AlertTriangle className="h-8 w-8 text-rose-500/40" />
+                        </div>
+                        <p className="text-xs text-slate-500">After imagery</p>
+                        <p className="text-[10px] text-slate-600 mt-1">{afterYear}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
+            );
+          })()}
 
           {/* Detection Summary Tiles */}
           <div className="flex flex-wrap gap-3 pt-2">
@@ -512,8 +549,8 @@ function AnalyzeContent() {
             })}
           </div>
 
-          {/* Load legacy comparison viewer if scan exists */}
-          {results && hotspotScan && (
+          {/* Load interactive comparison viewer if scan results exist */}
+          {results && hotspotScan ? (
             <div className="mt-4 rounded-xl border border-white/[.07] overflow-hidden">
               <ComparisonViewer
                 scan={hotspotScan}
@@ -523,7 +560,12 @@ function AnalyzeContent() {
                 selectedDetectionId={selectedDetectionId}
               />
             </div>
-          )}
+          ) : loadingScanResults ? (
+            <div className="mt-4 flex items-center justify-center p-8 rounded-xl border border-cyan-500/20 bg-cyan-500/5 text-xs font-mono text-cyan-300 gap-2">
+              <Loader2 className="h-4 w-4 animate-spin text-cyan-400" />
+              <span>Loading forensic comparison raster layers...</span>
+            </div>
+          ) : null}
         </section>
       )}
 
@@ -759,7 +801,7 @@ function AnalyzeContent() {
               </div>
               {results.report_pdf_path && (
                 <a
-                  href={`${API_BASE}${results.report_pdf_path}`}
+                  href={api.getAssetUrl(results.report_pdf_path)}
                   target="_blank"
                   rel="noreferrer"
                   className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 text-xs text-emerald-300 hover:bg-emerald-500/20 transition"

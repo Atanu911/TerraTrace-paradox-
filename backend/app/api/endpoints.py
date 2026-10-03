@@ -455,15 +455,34 @@ async def upload_scan_images(
     old_thumb_full = os.path.join(upload_dir, f"thumb_{old_filename}")
     new_thumb_full = os.path.join(upload_dir, f"thumb_{new_filename}")
 
+    def _safe_imread(path: str):
+        if not os.path.exists(path):
+            return None
+        try:
+            return cv2.imdecode(np.fromfile(path, dtype=np.uint8), cv2.IMREAD_COLOR)
+        except Exception:
+            return cv2.imread(path)
+
+    def _safe_imwrite(path: str, img):
+        ext = os.path.splitext(path)[1] or ".jpg"
+        try:
+            success, buf = cv2.imencode(ext, img)
+            if success:
+                buf.tofile(path)
+                return True
+        except Exception:
+            pass
+        return cv2.imwrite(path, img)
+
     try:
-        old_cv = cv2.imread(old_save_path)
-        new_cv = cv2.imread(new_save_path)
+        old_cv = _safe_imread(old_save_path)
+        new_cv = _safe_imread(new_save_path)
         if old_cv is not None:
             thumb_old = cv2.resize(old_cv, (256, int(256 * old_cv.shape[0] / old_cv.shape[1])))
-            cv2.imwrite(old_thumb_full, thumb_old)
+            _safe_imwrite(old_thumb_full, thumb_old)
         if new_cv is not None:
             thumb_new = cv2.resize(new_cv, (256, int(256 * new_cv.shape[0] / new_cv.shape[1])))
-            cv2.imwrite(new_thumb_full, thumb_new)
+            _safe_imwrite(new_thumb_full, thumb_new)
     except Exception as e:
         logger.warning(f"Failed to generate thumbnails: {e}")
 
