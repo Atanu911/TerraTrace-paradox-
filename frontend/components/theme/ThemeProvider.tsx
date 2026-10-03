@@ -35,6 +35,18 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     root.dataset.reduceMotion = String(settings.reduceMotion);
     const normalized = (INTENSITIES.indexOf(settings.intensity as (typeof INTENSITIES)[number]) + 1) / INTENSITIES.length;
     root.style.setProperty("--visual-intensity", String(normalized));
+
+    const isLight = settings.mode === "daylight" ||
+      (settings.mode === "auto" && typeof window !== "undefined" && window.matchMedia("(prefers-color-scheme: light)").matches);
+    
+    if (isLight) {
+      root.classList.remove("dark");
+      root.classList.add("light");
+    } else {
+      root.classList.remove("light");
+      root.classList.add("dark");
+    }
+
     try {
       if (settings.remember) localStorage.setItem("terratrace-theme", JSON.stringify(settings));
       else localStorage.removeItem("terratrace-theme");

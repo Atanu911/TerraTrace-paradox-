@@ -762,7 +762,7 @@ function SatelliteDetectionMap({
 export default function DashboardPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-[#07111D] flex items-center justify-center">
+      <div className="min-h-screen bg-transparent flex items-center justify-center">
         <div className="h-10 w-10 animate-spin rounded-full border-2 border-[#00D284] border-t-transparent" />
       </div>
     }>
@@ -852,7 +852,7 @@ function DashboardContent() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#07111D] text-slate-100 p-4 sm:p-6">
+    <div className="min-h-screen bg-transparent text-[var(--theme-text)] p-4 sm:p-6 transition-colors duration-300">
       <div className="mx-auto max-w-[1480px] space-y-5">
 
         {/* ── HEADER ── */}

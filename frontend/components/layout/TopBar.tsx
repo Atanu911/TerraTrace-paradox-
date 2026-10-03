@@ -22,7 +22,7 @@ export default function TopBar({ onSidebarToggle }: TopBarProps) {
   };
 
   return (
-    <header className="sticky top-0 z-30 border-b border-white/6 bg-[#0A1626]/90 backdrop-blur-xl">
+    <header className="sticky top-0 z-30 border-b border-[var(--theme-border)] bg-[var(--theme-surface)]/95 backdrop-blur-xl transition-colors duration-300">
       <div className="flex min-h-16 flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6 lg:flex-nowrap">
         {/* Logo + Title */}
         <div className="flex items-center gap-4">
@@ -31,16 +31,16 @@ export default function TopBar({ onSidebarToggle }: TopBarProps) {
               type="button"
               onClick={onSidebarToggle}
               aria-label="Toggle navigation menu"
-              className="inline-flex h-11 w-11 items-center justify-center rounded-lg border border-white/10 text-slate-200 hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-300 lg:hidden"
+              className="inline-flex h-11 w-11 items-center justify-center rounded-lg border border-[var(--theme-border)] text-[var(--theme-text)] hover:bg-[var(--theme-panel)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--theme-accent)] lg:hidden"
             >
               <Menu className="h-5 w-5" />
             </button>
           )}
-          <Link href="/dashboard" className="text-white hover:opacity-90 transition-opacity">
+          <Link href="/dashboard" className="text-[var(--theme-text)] hover:opacity-90 transition-opacity">
             <h1 className="text-lg font-display font-bold">
-              Terra<span className="text-cyan-400">Trace</span>
+              Terra<span className="text-[var(--theme-accent)]">Trace</span>
             </h1>
-            <p className="text-xs text-slate-400 font-mono tracking-wider">
+            <p className="text-xs text-[var(--theme-muted)] font-mono tracking-wider">
               Monitor • Detect • Protect
             </p>
           </Link>
@@ -49,16 +49,16 @@ export default function TopBar({ onSidebarToggle }: TopBarProps) {
         {/* Center - Search Bar */}
         <form onSubmit={handleSearch} className="order-3 w-full sm:order-none sm:flex-1 sm:max-w-lg sm:mx-4">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--theme-muted)]" />
             <input
               type="search"
               aria-label="Search monitoring locations"
               placeholder="Search a monitoring location..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="h-11 w-full rounded-lg border border-white/10 bg-white/5 py-2 pl-10 pr-12 text-sm text-white placeholder-slate-400 transition-all focus:border-cyan-400/50 focus:bg-white/10 focus:outline-none focus:ring-2 focus:ring-cyan-400/20"
+              className="h-11 w-full rounded-lg border border-[var(--theme-border)] bg-[var(--theme-panel)]/80 py-2 pl-10 pr-12 text-sm text-[var(--theme-text)] placeholder-[var(--theme-muted)] transition-all focus:border-[var(--theme-accent)] focus:bg-[var(--theme-surface)] focus:outline-none focus:ring-2 focus:ring-[var(--theme-accent)]/20"
             />
-            <button type="submit" aria-label="Search locations" className="absolute right-1 top-1 inline-flex h-9 w-9 items-center justify-center rounded-md text-cyan-200 hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-300">
+            <button type="submit" aria-label="Search locations" className="absolute right-1 top-1 inline-flex h-9 w-9 items-center justify-center rounded-md text-[var(--theme-accent)] hover:bg-black/10 dark:hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--theme-accent)]">
               <ArrowRight className="h-4 w-4" />
             </button>
           </div>
@@ -68,9 +68,9 @@ export default function TopBar({ onSidebarToggle }: TopBarProps) {
         <div className="ml-auto flex items-center gap-2 sm:gap-4">
           <Link
             href="/timeline"
-            className="inline-flex h-11 items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 text-sm text-slate-300 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-300"
+            className="inline-flex h-11 items-center gap-2 rounded-lg border border-[var(--theme-border)] bg-[var(--theme-panel)]/60 px-3 text-sm text-[var(--theme-text)] transition-colors hover:bg-[var(--theme-surface)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--theme-accent)]"
           >
-              <Calendar className="h-4 w-4" />
+              <Calendar className="h-4 w-4 text-[var(--theme-accent)]" />
               <span className="hidden sm:inline">Timeline</span>
           </Link>
           <TerraCoreControl />

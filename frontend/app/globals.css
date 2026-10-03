@@ -4,12 +4,12 @@
 :root {
   color-scheme: dark;
   --theme-bg: #06111b;
-  --theme-surface: rgba(10, 22, 38, 0.9);
-  --theme-panel: rgba(14, 30, 48, 0.82);
+  --theme-surface: rgba(10, 22, 38, 0.92);
+  --theme-panel: rgba(14, 30, 48, 0.84);
   --theme-text: #e2e8f0;
   --theme-muted: #94a3b8;
   --theme-accent: #22d3ee;
-  --theme-border: rgba(80, 140, 255, 0.28);
+  --theme-border: rgba(80, 180, 220, 0.28);
   --theme-glow-alpha: 0.22;
   --visual-intensity: 0.5;
   --sidebar-bg: rgba(6, 17, 27, .97);
@@ -40,13 +40,123 @@
   --font-mono: 'JetBrains Mono', monospace;
 }
 
-:root[data-theme="midnight"] { --theme-bg:#050914; --theme-surface:rgba(8,12,26,.94); --theme-panel:rgba(13,19,39,.88); --theme-accent:#9b8cff; --theme-border:rgba(142,124,255,.32); --sidebar-bg:#090b19; --sidebar-surface:#111329; --sidebar-active:rgba(155,140,255,.16); --sidebar-accent:#b0a6ff; --sidebar-edge:rgba(155,140,255,.2); --sidebar-hover:rgba(155,140,255,.08); }
-:root[data-theme="ocean"] { --theme-bg:#06111b; --theme-surface:rgba(10,22,38,.92); --theme-panel:rgba(14,30,48,.84); --theme-accent:#22d3ee; --theme-border:rgba(80,180,220,.3); --sidebar-bg:#07141f; --sidebar-surface:#0c1c2c; --sidebar-active:rgba(34,211,238,.13); --sidebar-accent:#22d3ee; --sidebar-edge:rgba(80,180,220,.2); --sidebar-hover:rgba(34,211,238,.07); }
-:root[data-theme="earth"] { --theme-bg:#11140f; --theme-surface:rgba(27,31,22,.94); --theme-panel:rgba(37,43,29,.87); --theme-accent:#a3d977; --theme-border:rgba(163,217,119,.3); --sidebar-bg:#14180f; --sidebar-surface:#202719; --sidebar-active:rgba(163,217,119,.14); --sidebar-accent:#b3e487; --sidebar-edge:rgba(163,217,119,.2); --sidebar-hover:rgba(163,217,119,.07); }
-:root[data-theme="daylight"] { color-scheme:light; --theme-bg:#edf1e8; --theme-surface:rgba(248,249,241,.97); --theme-panel:rgba(250,251,245,.96); --theme-text:#26352b; --theme-muted:#617165; --theme-accent:#287653; --theme-border:rgba(77,111,82,.25); --theme-glow-alpha:.07; --sidebar-bg:#f5f6ef; --sidebar-surface:#fbfcf7; --sidebar-text:#26352b; --sidebar-muted:#68786c; --sidebar-active:rgba(62,125,82,.12); --sidebar-accent:#287653; --sidebar-edge:#d9e1d2; --sidebar-hover:#eaf0e5; }
-:root[data-theme="high-contrast"] { --theme-bg:#000; --theme-surface:#050505; --theme-panel:#080808; --theme-text:#fff; --theme-muted:#e7e7e7; --theme-accent:#00ffff; --theme-border:#fff; --theme-glow-alpha:0; --sidebar-bg:#000; --sidebar-surface:#050505; --sidebar-text:#fff; --sidebar-muted:#fff; --sidebar-active:#001c1c; --sidebar-accent:#0ff; --sidebar-edge:#fff; --sidebar-hover:#161616; }
-:root[data-theme="auto"] { color-scheme:dark; }
-@media (prefers-color-scheme: light) { :root[data-theme="auto"] { color-scheme:light; --theme-bg:#edf1e8; --theme-surface:rgba(248,249,241,.97); --theme-panel:rgba(250,251,245,.96); --theme-text:#26352b; --theme-muted:#617165; --theme-accent:#287653; --theme-border:rgba(77,111,82,.25); --theme-glow-alpha:.07; --sidebar-bg:#f5f6ef; --sidebar-surface:#fbfcf7; --sidebar-text:#26352b; --sidebar-muted:#68786c; --sidebar-active:rgba(62,125,82,.12); --sidebar-accent:#287653; --sidebar-edge:#d9e1d2; --sidebar-hover:#eaf0e5; } }
+:root[data-theme="midnight"] {
+  --theme-bg: #050914;
+  --theme-surface: rgba(10, 16, 36, 0.94);
+  --theme-panel: rgba(15, 23, 48, 0.88);
+  --theme-accent: #9b8cff;
+  --theme-border: rgba(142, 124, 255, 0.28);
+  --theme-text: #f1f5f9;
+  --theme-muted: #94a3b8;
+  --sidebar-bg: #090b19;
+  --sidebar-surface: #111329;
+  --sidebar-text: #f1f5f9;
+  --sidebar-muted: #94a3b8;
+  --sidebar-active: rgba(155, 140, 255, 0.16);
+  --sidebar-accent: #b0a6ff;
+  --sidebar-edge: rgba(155, 140, 255, 0.2);
+  --sidebar-hover: rgba(155, 140, 255, 0.08);
+}
+
+:root[data-theme="ocean"] {
+  --theme-bg: #06111b;
+  --theme-surface: rgba(10, 22, 38, 0.92);
+  --theme-panel: rgba(14, 30, 48, 0.84);
+  --theme-accent: #22d3ee;
+  --theme-border: rgba(80, 180, 220, 0.28);
+  --theme-text: #e2e8f0;
+  --theme-muted: #94a3b8;
+  --sidebar-bg: #07141f;
+  --sidebar-surface: #0c1c2c;
+  --sidebar-text: #e2e8f0;
+  --sidebar-muted: #94a3b8;
+  --sidebar-active: rgba(34, 211, 238, 0.13);
+  --sidebar-accent: #22d3ee;
+  --sidebar-edge: rgba(80, 180, 220, 0.2);
+  --sidebar-hover: rgba(34, 211, 238, 0.07);
+}
+
+:root[data-theme="earth"] {
+  --theme-bg: #0d140e;
+  --theme-surface: rgba(22, 32, 22, 0.94);
+  --theme-panel: rgba(28, 42, 28, 0.88);
+  --theme-accent: #00D284;
+  --theme-border: rgba(163, 217, 119, 0.28);
+  --theme-text: #ecf5e6;
+  --theme-muted: #9cae96;
+  --sidebar-bg: #14180f;
+  --sidebar-surface: #202719;
+  --sidebar-text: #ecf5e6;
+  --sidebar-muted: #9cae96;
+  --sidebar-active: rgba(163, 217, 119, 0.14);
+  --sidebar-accent: #b3e487;
+  --sidebar-edge: rgba(163, 217, 119, 0.2);
+  --sidebar-hover: rgba(163, 217, 119, 0.07);
+}
+
+:root[data-theme="daylight"] {
+  color-scheme: light;
+  --theme-bg: #f3f5f0;
+  --theme-surface: rgba(255, 255, 255, 0.97);
+  --theme-panel: rgba(255, 255, 255, 0.94);
+  --theme-text: #0f172a;
+  --theme-muted: #475569;
+  --theme-accent: #059669;
+  --theme-border: rgba(0, 0, 0, 0.12);
+  --theme-glow-alpha: 0.06;
+  --sidebar-bg: #ffffff;
+  --sidebar-surface: #f8fafc;
+  --sidebar-text: #0f172a;
+  --sidebar-muted: #64748b;
+  --sidebar-active: rgba(5, 150, 105, 0.12);
+  --sidebar-accent: #059669;
+  --sidebar-edge: rgba(0, 0, 0, 0.1);
+  --sidebar-hover: rgba(0, 0, 0, 0.04);
+}
+
+:root[data-theme="high-contrast"] {
+  --theme-bg: #000000;
+  --theme-surface: #050505;
+  --theme-panel: #0a0a0a;
+  --theme-text: #ffffff;
+  --theme-muted: #e2e8f0;
+  --theme-accent: #00ffff;
+  --theme-border: #ffffff;
+  --theme-glow-alpha: 0;
+  --sidebar-bg: #000000;
+  --sidebar-surface: #050505;
+  --sidebar-text: #ffffff;
+  --sidebar-muted: #ffffff;
+  --sidebar-active: #001c1c;
+  --sidebar-accent: #00ffff;
+  --sidebar-edge: #ffffff;
+  --sidebar-hover: #161616;
+}
+
+:root[data-theme="auto"] {
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: light) {
+  :root[data-theme="auto"] {
+    color-scheme: light;
+    --theme-bg: #f3f5f0;
+    --theme-surface: rgba(255, 255, 255, 0.97);
+    --theme-panel: rgba(255, 255, 255, 0.94);
+    --theme-text: #0f172a;
+    --theme-muted: #475569;
+    --theme-accent: #059669;
+    --theme-border: rgba(0, 0, 0, 0.12);
+    --theme-glow-alpha: 0.06;
+    --sidebar-bg: #ffffff;
+    --sidebar-surface: #f8fafc;
+    --sidebar-text: #0f172a;
+    --sidebar-muted: #64748b;
+    --sidebar-active: rgba(5, 150, 105, 0.12);
+    --sidebar-accent: #059669;
+    --sidebar-edge: rgba(0, 0, 0, 0.1);
+    --sidebar-hover: rgba(0, 0, 0, 0.04);
+  }
+}
 
 body {
   position: relative;
@@ -95,14 +205,14 @@ code, pre, .font-mono {
   font-family: var(--font-mono);
 }
 
-/* Glassmorphism primitives */
+/* Glassmorphism primitives tied directly to theme */
 .glass-panel {
   position: relative;
   isolation: isolate;
-  background: linear-gradient(135deg, rgba(14, 30, 62, 0.8) 0%, rgba(9, 21, 46, 0.85) 100%);
+  background: var(--theme-panel);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(80, 140, 255, 0.22);
+  border: 1px solid var(--theme-border);
   box-shadow: 0 8px 32px 0 rgba(0, 8, 28, 0.37);
   transition: border-color 220ms ease, box-shadow 260ms ease, background-color 220ms ease;
 }
@@ -135,10 +245,99 @@ code, pre, .font-mono {
 .glass-card {
   position: relative;
   isolation: isolate;
-  background: rgba(15, 23, 42, 0.65);
+  background: var(--theme-panel);
   backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--theme-border);
   transition: border-color 220ms ease, box-shadow 260ms ease, background-color 220ms ease;
+}
+
+/* ───────────────────────────────────────────────────────────── */
+/* Universal Site-Wide Theme Surface & Panel Overrides            */
+/* ───────────────────────────────────────────────────────────── */
+html[data-theme] .bg-\[\#07111D\],
+html[data-theme] .bg-\[\#06111b\],
+html[data-theme] .bg-\[\#071320\],
+html[data-theme] .bg-\[\#050914\] {
+  background-color: var(--theme-bg) !important;
+}
+
+html[data-theme] .bg-\[\#0A1625\],
+html[data-theme] .bg-\[\#0A1626\],
+html[data-theme] .bg-\[\#0C1C2C\],
+html[data-theme] .bg-\[\#071329\],
+html[data-theme] .bg-\[\#071522\],
+html[data-theme] .bg-\[\#060E20\],
+html[data-theme] .bg-\[\#0b1827\] {
+  background-color: var(--theme-panel) !important;
+}
+
+html[data-theme] .border-\[\#1D2D42\],
+html[data-theme] .border-blue-900\/60,
+html[data-theme] .border-blue-900\/30 {
+  border-color: var(--theme-border) !important;
+}
+
+/* Daylight (Light Mode) typography, surface, and element tuning */
+html[data-theme="daylight"] body,
+html[data-theme="daylight"] h1,
+html[data-theme="daylight"] h2,
+html[data-theme="daylight"] h3,
+html[data-theme="daylight"] h4,
+html[data-theme="daylight"] .text-white {
+  color: var(--theme-text) !important;
+}
+
+html[data-theme="daylight"] .text-slate-100,
+html[data-theme="daylight"] .text-slate-200,
+html[data-theme="daylight"] .text-slate-300 {
+  color: #1e293b !important;
+}
+
+html[data-theme="daylight"] .text-slate-400,
+html[data-theme="daylight"] .text-slate-500 {
+  color: var(--theme-muted) !important;
+}
+
+html[data-theme="daylight"] .border-white\/\[\.06\],
+html[data-theme="daylight"] .border-white\/\[\.07\],
+html[data-theme="daylight"] .border-white\/\[\.08\],
+html[data-theme="daylight"] .border-white\/10,
+html[data-theme="daylight"] .border-white\/15,
+html[data-theme="daylight"] .border-white\/20 {
+  border-color: rgba(0, 0, 0, 0.12) !important;
+}
+
+html[data-theme="daylight"] .bg-white\/\[\.02\],
+html[data-theme="daylight"] .bg-white\/\[\.03\],
+html[data-theme="daylight"] .bg-white\/\[\.04\],
+html[data-theme="daylight"] .bg-white\/5,
+html[data-theme="daylight"] .bg-white\/10 {
+  background-color: rgba(0, 0, 0, 0.04) !important;
+}
+
+html[data-theme="daylight"] .site-background {
+  opacity: 0.18;
+  background-image:
+    linear-gradient(112deg, rgba(243, 245, 240, 0.95) 0%, rgba(243, 245, 240, 0.90) 100%),
+    url("/earth-observation-drone.jpeg");
+}
+
+/* High Contrast Mode tuning */
+html[data-theme="high-contrast"] body,
+html[data-theme="high-contrast"] .bg-\[\#07111D\],
+html[data-theme="high-contrast"] .bg-\[\#0A1625\],
+html[data-theme="high-contrast"] .bg-\[\#0A1626\] {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+}
+
+html[data-theme="high-contrast"] * {
+  border-color: rgba(255, 255, 255, 0.4) !important;
+}
+
+html[data-theme="high-contrast"] .text-slate-400,
+html[data-theme="high-contrast"] .text-slate-500 {
+  color: #cccccc !important;
 }
 
 .glass-panel::before,
